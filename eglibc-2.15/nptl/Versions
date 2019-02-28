@@ -159,6 +159,10 @@ libpthread {
 
     __libc_current_sigrtmin; __libc_current_sigrtmax;
     __libc_allocate_rtsig;
+
+    #Sonika's special function 
+    decrement_ignore_flag;
+    increment_ignore_flag;
   }
 
   GLIBC_2.1.1 {
