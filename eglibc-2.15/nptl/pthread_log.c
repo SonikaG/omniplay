@@ -8,7 +8,7 @@
 #include "semaphore.h"
 #include <fcntl.h>
 #include <unistd.h>
-
+#include <assert.h>
 #include <shlib-compat.h>
 
 // Turns debugging on and off
@@ -3056,35 +3056,26 @@ unsigned long long pthread_log__rdtscp(void)
 
 extern int increment_ignore_flag (void)
 {
-    if(write(99999, "what is going on!!!\n", 20) != 20){
-      return -5;
-    }
-    char buf[50] = {0};
+    /*char buf[50] = {0};
     char *cur = buf; 
     char *end = buf + sizeof(buf);
     int *num;
     struct pthread_log_head *head = THREAD_GETMEM(THREAD_SELF, log_head);
     cur += snprintf(cur, end-cur, "%p", &head->ignore_flag);
     snprintf(cur, end-cur, "%s", "address_thread");
-    //write(99999, "here is ignore_flag", 20);
-    write(99999, buf, strlen(buf));
-    //write(99999, "here it ends", 2);
+    write(99999, buf, strlen(buf));*/
+    
+    struct pthread_log_head *head = THREAD_GETMEM(THREAD_SELF, log_head);
     if(!head){
       return -1;
     }
-    if((head->ignore_flag) == 10){
+    /*if((head->ignore_flag) == 10){
         return -1; //should this be a specific values?
-    }
+    }*/
     else{
-        //char buf[8] = {0};
-        //int* num;
+        assert(head->ignore_flag >= 0);
         head->ignore_flag++;
-        //DPRINT("ignore flag is %d\n", head->ignore_flag);
-        //snprintf(buf, sizeof(num), "%p", num);
-        //write(99999, "here is ignore_flag", 20); 
-        //write(99999, buf, strlen(buf));
-        //write(99999, "\n", 2);
-        write(99999, "what is going on???\n", 20);
+	assert(head->ignore_flag > 0);
         return head->ignore_flag;
     }
     //write(99999, "what is going on???", 20);
@@ -3093,30 +3084,26 @@ extern int increment_ignore_flag (void)
 
 extern int decrement_ignore_flag (void)
 {
-    /*if(write(99999, "what is going on???\n", 20) != 20){
-      return -5;
-    }*/
-    char buf[50] = {0};
+    /*char buf[50] = {0};
     char *cur = buf;
     char *end = buf + sizeof(buf);
     int *num;
     struct pthread_log_head *head = THREAD_GETMEM(THREAD_SELF, log_head);
     cur += snprintf(cur, end-cur, "%p", &head->ignore_flag);
     snprintf(cur, end-cur, "%s", "address_thread");
-    //write(99999, "here is ignore_flag", 20);
-    write(99999, buf, strlen(buf));
+    write(99999, buf, strlen(buf));*/
 
-    //struct pthread_log_head *head = THREAD_GETMEM(THREAD_SELF, log_head);
+    struct pthread_log_head *head = THREAD_GETMEM(THREAD_SELF, log_head);
     //should not be allowed 
     if(!head){
       return -1;
     }
-    if(head->ignore_flag == 0){
-        return -3; //should this be a specific values?
-    }
+    /*if(head->ignore_flag == 0){
+        return -1; //should this be a specific values?
+    }*/
     else{
+	assert(head->ignore_flag > 0);
         head->ignore_flag--;
-        //DPRINT("ignore flag is %d\n", head->ignore_flag);
         return head->ignore_flag;
     }
 }
