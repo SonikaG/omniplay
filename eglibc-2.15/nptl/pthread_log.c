@@ -46,6 +46,10 @@ unsigned long* ppthread_log_make_fake_clock = NULL;
 void pthread_extra_log_mismatch ();
 #endif
 
+//forward declaration...should probs be moved elsewhere later
+extern int decrement_ignore_flag (void);
+extern int increment_ignore_flag (void);
+
 // This prints a message outside of the record/replay mechanism - useful for debugging
 void pthread_log_debug(const char* fmt,...)
 {
@@ -327,11 +331,9 @@ int check_recording (void)
 	INTERNAL_SYSCALL(pthread_extra_log,__err,2,0,ehead); // Register log allocation
     }
 #endif
-    head->ignore_flag++;
-    //increment_ignore_flag();
+    increment_ignore_flag();
     pthread_log_init ();
-    //decrement_ignore_flag();
-    head->ignore_flag--;
+    decrement_ignore_flag();
     DPRINT ("Kernel sets log status to %d\n", pthread_log_status);
     malloc_setup(pthread_log_mutex_lock, pthread_log_mutex_trylock, pthread_log_mutex_unlock);
 #ifdef DO_FAKE_CALLS
@@ -391,11 +393,13 @@ register_log (void)
 void lock_ignore_address (void)
 {
     struct pthread_log_head* head = THREAD_GETMEM (THREAD_SELF, log_head);
-    head->ignore_flag++;
+    increment_ignore_flag;
+    //head->ignore_flag++;
     if (mlock (&head->ignore_flag, sizeof(int)) < 0) {
 	    pthread_log_debug ("mlock of ignore_flag failed\n");
     }
-    head->ignore_flag--;
+    decrement_ignore_flag;
+    //head->ignore_flag--;
 }
 
 void
@@ -437,10 +441,10 @@ pthread_log_record (int retval, unsigned long type, unsigned long check, int is_
     data->errno = errno; // May have changed in ignore region
     //head->ignore_flag = is_entry;
     if(is_entry){
-      head->ignore_flag++;
+      increment_ignore_flag;
     }
     else{
-      head->ignore_flag--;
+      decrement_ignore_flag;
     }
     DPRINT ("Added record to log: clock %lu retval %d type %lu check %lx\n", data->clock, data->retval, data->type, data->check);
     (head->next)++; // Increment to next log record
@@ -570,10 +574,10 @@ pthread_log_record (int retval, unsigned long type, unsigned long check, int is_
 
     //head->ignore_flag = is_entry;
     if(is_entry){
-      head->ignore_flag++;
+      increment_ignore_flag;
     }
     else{
-      head->ignore_flag--;
+      decrement_ignore_flag;
     }
     DPRINT ("Added record to log: clock %lu retval %d type %lu check %lx errno %d\n", new_clock, retval, type, check, errno);
 }
@@ -2396,7 +2400,7 @@ __pthread_once_rec (head, once_control, init_routine)
     int i, rc, found = 0;
     struct my_once_lock* tmp, *prev_tmp;
 
-    head->ignore_flag++; // don't record this private lock
+    increment_ignore_flag; // don't record this private lock
     
     // Get a per-control lock
   try_again:
@@ -2463,7 +2467,7 @@ __pthread_once_rec (head, once_control, init_routine)
     }
     lll_unlock (once_lock, LLL_PRIVATE);
 
-    head->ignore_flag--;
+    decrement_ignore_flag;
 
     return rc;
 }
@@ -2477,10 +2481,10 @@ __pthread_once_rep (head, once_control, init_routine)
     int retval, rc;
 
     pthread_log_replay (PTHREAD_ONCE_ENTER, (u_long) once_control); 
-    head->ignore_flag++; 
+    increment_ignore_flag; 
     real_init_routine = init_routine;
     retval = __no_pthread_once (once_control, shim_init_routine);
-    head->ignore_flag--; 
+    decrement_ignore_flag; 
     rc = pthread_log_replay (PTHREAD_ONCE_EXIT, (u_long) once_control); 
 
     if (retval != rc) pthread_log_debug ("pthread_once returns %d on recording and %d on replay\n", rc, retval);
@@ -2594,22 +2598,22 @@ int pthread_log__sync_read(volatile int* val)
   if (is_recording()) { 
     head = THREAD_GETMEM (THREAD_SELF, log_head);
 
-    head->ignore_flag++;
+    increment_ignore_flag;
     // Enforce that only one thread can be doing a sync operation at a time
     lll_lock(sync_lock, LLL_PRIVATE);
     pthread_log_record (0, SYNC_READ_ENTER, (u_long) val, 1); 
     ret = *val; // This is not an atomic op but we still need to synchronize it
     pthread_log_record (ret, SYNC_READ_EXIT, (u_long) val, 1); 
     lll_unlock(sync_lock, LLL_PRIVATE);
-    head->ignore_flag--;
+    decrement_ignore_flag;
   } else if (is_replaying()) {
     head = THREAD_GETMEM (THREAD_SELF, log_head);
 
     // Enforced ordering ensures deterministic result
     pthread_log_replay (SYNC_READ_ENTER, (u_long) val); 
-    head->ignore_flag++;
+    increment_ignore_flag;
     ret = *val;
-    head->ignore_flag--;
+    decrement_ignore_flag;
     t = pthread_log_replay (SYNC_READ_EXIT, (u_long) val); 
     if (t != ret) {
       pthread_log_debug ("sync_read recorded %d replayed %d ret\n", t, ret);
@@ -2629,22 +2633,22 @@ int pthread_log__sync_add_and_fetch(int* val, int x)
   if (is_recording()) { 
     head = THREAD_GETMEM (THREAD_SELF, log_head);
 
-    head->ignore_flag++;
+    increment_ignore_flag;
     // Enforce that only one thread can be doing a sync operation at a time
     lll_lock(sync_lock, LLL_PRIVATE);
     pthread_log_record (0, SYNC_ADD_AND_FETCH_ENTER, (u_long) val, 1); 
     ret =  __sync_add_and_fetch(val, x);
     pthread_log_record (0, SYNC_ADD_AND_FETCH_EXIT, (u_long) val, 1); 
     lll_unlock(sync_lock, LLL_PRIVATE);
-    head->ignore_flag--;
+    decrement_ignore_flag;
   } else if (is_replaying()) {
     head = THREAD_GETMEM (THREAD_SELF, log_head);
 
     // Enforced ordering ensures deterministic result
     pthread_log_replay (SYNC_ADD_AND_FETCH_ENTER, (u_long) val); 
-    head->ignore_flag++;
+    increment_ignore_flag;
     ret =  __sync_add_and_fetch(val, x);
-    head->ignore_flag--;
+    decrement_ignore_flag;
     pthread_log_replay (SYNC_ADD_AND_FETCH_EXIT, (u_long) val); 
   } else {
     ret =  __sync_add_and_fetch(val, x);
@@ -2660,22 +2664,22 @@ int pthread_log__sync_sub_and_fetch(int* val, int x)
   if (is_recording()) { 
     head = THREAD_GETMEM (THREAD_SELF, log_head);
 
-    head->ignore_flag++;
+    increment_ignore_flag;
     // Enforce that only one thread can be doing a sync operation at a time
     lll_lock(sync_lock, LLL_PRIVATE);
     pthread_log_record (0, SYNC_SUB_AND_FETCH_ENTER, (u_long) val, 1); 
     ret =  __sync_sub_and_fetch(val, x);
     pthread_log_record (0, SYNC_SUB_AND_FETCH_EXIT, (u_long) val, 1); 
     lll_unlock(sync_lock, LLL_PRIVATE);
-    head->ignore_flag--;
+    decrement_ignore_flag;
   } else if (is_replaying()) {
     head = THREAD_GETMEM (THREAD_SELF, log_head);
 
     // Enforced ordering ensures deterministic result
     pthread_log_replay (SYNC_SUB_AND_FETCH_ENTER, (u_long) val); 
-    head->ignore_flag++;
+    increment_ignore_flag;
     ret =  __sync_sub_and_fetch(val, x);
-    head->ignore_flag--;
+    decrement_ignore_flag;
     pthread_log_replay (SYNC_SUB_AND_FETCH_EXIT, (u_long) val); 
   } else {
     ret =  __sync_sub_and_fetch(val, x);
@@ -2691,22 +2695,22 @@ int pthread_log__sync_fetch_and_add(int* val, int x)
   if (is_recording()) { 
     head = THREAD_GETMEM (THREAD_SELF, log_head);
 
-    head->ignore_flag++;
+    increment_ignore_flag;
     // Enforce that only one thread can be doing a sync operation at a time
     lll_lock(sync_lock, LLL_PRIVATE);
     pthread_log_record (0, SYNC_FETCH_AND_ADD_ENTER, (u_long) val, 1); 
     ret =  __sync_fetch_and_add(val, x);
     pthread_log_record (0, SYNC_FETCH_AND_ADD_EXIT, (u_long) val, 1); 
     lll_unlock(sync_lock, LLL_PRIVATE);
-    head->ignore_flag--;
+    decrement_ignore_flag;
   } else if (is_replaying()) {
     head = THREAD_GETMEM (THREAD_SELF, log_head);
 
     // Enforced ordering ensures deterministic result
     pthread_log_replay (SYNC_FETCH_AND_ADD_ENTER, (u_long) val); 
-    head->ignore_flag++;
+    increment_ignore_flag;
     ret =  __sync_fetch_and_add(val, x);
-    head->ignore_flag--;
+    decrement_ignore_flag;
     pthread_log_replay (SYNC_FETCH_AND_ADD_EXIT, (u_long) val); 
   } else {
     ret =  __sync_fetch_and_add(val, x);
@@ -2722,22 +2726,22 @@ int pthread_log__sync_fetch_and_sub(int* val, int x)
   if (is_recording()) { 
     head = THREAD_GETMEM (THREAD_SELF, log_head);
 
-    head->ignore_flag++;
+    increment_ignore_flag;
     // Enforce that only one thread can be doing a sync operation at a time
     lll_lock(sync_lock, LLL_PRIVATE);
     pthread_log_record (0, SYNC_FETCH_AND_SUB_ENTER, (u_long) val, 1); 
     ret =  __sync_fetch_and_sub(val, x);
     pthread_log_record (0, SYNC_FETCH_AND_SUB_EXIT, (u_long) val, 1); 
     lll_unlock(sync_lock, LLL_PRIVATE);
-    head->ignore_flag--;
+    decrement_ignore_flag;
   } else if (is_replaying()) {
     head = THREAD_GETMEM (THREAD_SELF, log_head);
 
     // Enforced ordering ensures deterministic result
     pthread_log_replay (SYNC_FETCH_AND_SUB_ENTER, (u_long) val); 
-    head->ignore_flag++;
+    increment_ignore_flag;
     ret =  __sync_fetch_and_sub(val, x);
-    head->ignore_flag--;
+    decrement_ignore_flag;
     pthread_log_replay (SYNC_FETCH_AND_SUB_EXIT, (u_long) val); 
   } else {
     ret =  __sync_fetch_and_sub(val, x);
@@ -2753,22 +2757,22 @@ int pthread_log__sync_lock_test_and_set(int* val, int x)
   if (is_recording()) { 
     head = THREAD_GETMEM (THREAD_SELF, log_head);
 
-    head->ignore_flag++;
+    increment_ignore_flag;
     // Enforce that only one thread can be doing a sync operation at a time
     lll_lock(sync_lock, LLL_PRIVATE);
     pthread_log_record (0, SYNC_LOCK_TEST_AND_SET_ENTER, (u_long) val, 1); 
     ret =  __sync_lock_test_and_set(val, x);
     pthread_log_record (0, SYNC_LOCK_TEST_AND_SET_EXIT, (u_long) val, 1); 
     lll_unlock(sync_lock, LLL_PRIVATE);
-    head->ignore_flag--;
+    decrement_ignore_flag;
   } else if (is_replaying()) {
     head = THREAD_GETMEM (THREAD_SELF, log_head);
 
     // Enforced ordering ensures deterministic result
     pthread_log_replay (SYNC_LOCK_TEST_AND_SET_ENTER, (u_long) val); 
-    head->ignore_flag++;
+    increment_ignore_flag;
     ret =  __sync_lock_test_and_set(val, x);
-    head->ignore_flag--;
+    decrement_ignore_flag;
     pthread_log_replay (SYNC_LOCK_TEST_AND_SET_EXIT, (u_long) val); 
   } else {
     ret =  __sync_lock_test_and_set(val, x);
@@ -2784,22 +2788,22 @@ int pthread_log__sync_bool_compare_and_swap(int* val, int x, int y)
   if (is_recording()) { 
     head = THREAD_GETMEM (THREAD_SELF, log_head);
 
-    head->ignore_flag++;
+    increment_ignore_flag;
     // Enforce that only one thread can be doing a sync operation at a time
     lll_lock(sync_lock, LLL_PRIVATE);
     pthread_log_record (0, SYNC_BOOL_COMPARE_AND_SWAP_ENTER, (u_long) val, 1); 
     ret =  __sync_bool_compare_and_swap(val, x, y);
     pthread_log_record (0, SYNC_BOOL_COMPARE_AND_SWAP_EXIT, (u_long) val, 1); 
     lll_unlock(sync_lock, LLL_PRIVATE);
-    head->ignore_flag--;
+    decrement_ignore_flag;
   } else if (is_replaying()) {
     head = THREAD_GETMEM (THREAD_SELF, log_head);
 
     // Enforced ordering ensures deterministic result
     pthread_log_replay (SYNC_BOOL_COMPARE_AND_SWAP_ENTER, (u_long) val); 
-    head->ignore_flag++;
+    increment_ignore_flag;
     ret =  __sync_bool_compare_and_swap(val, x, y);
-    head->ignore_flag--;
+    decrement_ignore_flag;
     pthread_log_replay (SYNC_BOOL_COMPARE_AND_SWAP_EXIT, (u_long) val); 
   } else {
     ret =  __sync_bool_compare_and_swap(val, x, y);
@@ -2815,22 +2819,22 @@ int pthread_log__sync_val_compare_and_swap(int* val, int x, int y)
   if (is_recording()) { 
     head = THREAD_GETMEM (THREAD_SELF, log_head);
 
-    head->ignore_flag++;
+    increment_ignore_flag;
     // Enforce that only one thread can be doing a sync operation at a time
     lll_lock(sync_lock, LLL_PRIVATE);
     pthread_log_record (0, SYNC_VAL_COMPARE_AND_SWAP_ENTER, (u_long) val, 1); 
     ret =  __sync_val_compare_and_swap(val, x, y);
     pthread_log_record (0, SYNC_VAL_COMPARE_AND_SWAP_EXIT, (u_long) val, 1); 
     lll_unlock(sync_lock, LLL_PRIVATE);
-    head->ignore_flag--;
+    decrement_ignore_flag;
   } else if (is_replaying()) {
     head = THREAD_GETMEM (THREAD_SELF, log_head);
 
     // Enforced ordering ensures deterministic result
     pthread_log_replay (SYNC_VAL_COMPARE_AND_SWAP_ENTER, (u_long) val); 
-    head->ignore_flag++;
+    increment_ignore_flag;
     ret =  __sync_val_compare_and_swap(val, x, y);
-    head->ignore_flag--;
+    decrement_ignore_flag;
     pthread_log_replay (SYNC_VAL_COMPARE_AND_SWAP_EXIT, (u_long) val); 
   } else {
     ret =  __sync_val_compare_and_swap(val, x, y);
@@ -2846,22 +2850,22 @@ unsigned int pthread_log__sync_add_and_fetch_uint(unsigned int* val, unsigned in
   if (is_recording()) { 
     head = THREAD_GETMEM (THREAD_SELF, log_head);
 
-    head->ignore_flag++;
+    increment_ignore_flag;
     // Enforce that only one thread can be doing a sync operation at a time
     lll_lock(sync_lock, LLL_PRIVATE);
     pthread_log_record (0, SYNC_ADD_AND_FETCH_ENTER, (u_long) val, 1); 
     ret =  __sync_add_and_fetch(val, x);
     pthread_log_record (0, SYNC_ADD_AND_FETCH_EXIT, (u_long) val, 1); 
     lll_unlock(sync_lock, LLL_PRIVATE);
-    head->ignore_flag--;
+    decrement_ignore_flag;
   } else if (is_replaying()) {
     head = THREAD_GETMEM (THREAD_SELF, log_head);
 
     // Enforced ordering ensures deterministic result
     pthread_log_replay (SYNC_ADD_AND_FETCH_ENTER, (u_long) val); 
-    head->ignore_flag++;
+    increment_ignore_flag;
     ret =  __sync_add_and_fetch(val, x);
-    head->ignore_flag--;
+    decrement_ignore_flag;
     pthread_log_replay (SYNC_ADD_AND_FETCH_EXIT, (u_long) val); 
   } else {
     ret =  __sync_add_and_fetch(val, x);
@@ -2877,22 +2881,22 @@ unsigned int pthread_log__sync_bool_compare_and_swap_uint(unsigned int* val, uns
   if (is_recording()) { 
     head = THREAD_GETMEM (THREAD_SELF, log_head);
 
-    head->ignore_flag++;
+    increment_ignore_flag;
     // Enforce that only one thread can be doing a sync operation at a time
     lll_lock(sync_lock, LLL_PRIVATE);
     pthread_log_record (0, SYNC_BOOL_COMPARE_AND_SWAP_ENTER, (u_long) val, 1); 
     ret =  __sync_bool_compare_and_swap(val, x, y);
     pthread_log_record (0, SYNC_BOOL_COMPARE_AND_SWAP_EXIT, (u_long) val, 1); 
     lll_unlock(sync_lock, LLL_PRIVATE);
-    head->ignore_flag--;
+    decrement_ignore_flag;
   } else if (is_replaying()) {
     head = THREAD_GETMEM (THREAD_SELF, log_head);
 
     // Enforced ordering ensures deterministic result
     pthread_log_replay (SYNC_BOOL_COMPARE_AND_SWAP_ENTER, (u_long) val); 
-    head->ignore_flag++;
+    increment_ignore_flag;
     ret =  __sync_bool_compare_and_swap(val, x, y);
-    head->ignore_flag--;
+    decrement_ignore_flag;
     pthread_log_replay (SYNC_BOOL_COMPARE_AND_SWAP_EXIT, (u_long) val); 
   } else {
     ret =  __sync_bool_compare_and_swap(val, x, y);
@@ -2908,22 +2912,22 @@ unsigned int pthread_log__sync_sub_and_fetch_uint(unsigned int* val, unsigned in
   if (is_recording()) { 
     head = THREAD_GETMEM (THREAD_SELF, log_head);
 
-    head->ignore_flag++;
+    increment_ignore_flag;
     // Enforce that only one thread can be doing a sync operation at a time
     lll_lock(sync_lock, LLL_PRIVATE);
     pthread_log_record (0, SYNC_SUB_AND_FETCH_ENTER, (u_long) val, 1); 
     ret =  __sync_sub_and_fetch(val, x);
     pthread_log_record (0, SYNC_SUB_AND_FETCH_EXIT, (u_long) val, 1); 
     lll_unlock(sync_lock, LLL_PRIVATE);
-    head->ignore_flag--;
+    decrement_ignore_flag;
   } else if (is_replaying()) {
     head = THREAD_GETMEM (THREAD_SELF, log_head);
 
     // Enforced ordering ensures deterministic result
     pthread_log_replay (SYNC_SUB_AND_FETCH_ENTER, (u_long) val); 
-    head->ignore_flag++;
+    increment_ignore_flag;
     ret =  __sync_sub_and_fetch(val, x);
-    head->ignore_flag--;
+    decrement_ignore_flag;
     pthread_log_replay (SYNC_SUB_AND_FETCH_EXIT, (u_long) val); 
   } else {
     ret =  __sync_sub_and_fetch(val, x);
@@ -2939,22 +2943,22 @@ uint64_t pthread_log__sync_add_and_fetch_uint64(uint64_t* val, uint64_t x)
   if (is_recording()) { 
     head = THREAD_GETMEM (THREAD_SELF, log_head);
 
-    head->ignore_flag++;
+    increment_ignore_flag;
     // Enforce that only one thread can be doing a sync operation at a time
     lll_lock(sync_lock, LLL_PRIVATE);
     pthread_log_record (0, SYNC_ADD_AND_FETCH_ENTER, (u_long) val, 1); 
     ret =  __sync_add_and_fetch(val, x);
     pthread_log_record (0, SYNC_ADD_AND_FETCH_EXIT, (u_long) val, 1); 
     lll_unlock(sync_lock, LLL_PRIVATE);
-    head->ignore_flag--;
+    decrement_ignore_flag;
   } else if (is_replaying()) {
     head = THREAD_GETMEM (THREAD_SELF, log_head);
 
     // Enforced ordering ensures deterministic result
     pthread_log_replay (SYNC_ADD_AND_FETCH_ENTER, (u_long) val); 
-    head->ignore_flag++;
+    increment_ignore_flag;
     ret =  __sync_add_and_fetch(val, x);
-    head->ignore_flag--;
+    decrement_ignore_flag;
     pthread_log_replay (SYNC_ADD_AND_FETCH_EXIT, (u_long) val); 
   } else {
     ret =  __sync_add_and_fetch(val, x);
@@ -2970,22 +2974,22 @@ uint64_t pthread_log__sync_sub_and_fetch_uint64(uint64_t* val, uint64_t x)
   if (is_recording()) { 
     head = THREAD_GETMEM (THREAD_SELF, log_head);
 
-    head->ignore_flag++;
+    increment_ignore_flag;
     // Enforce that only one thread can be doing a sync operation at a time
     lll_lock(sync_lock, LLL_PRIVATE);
     pthread_log_record (0, SYNC_SUB_AND_FETCH_ENTER, (u_long) val, 1); 
     ret =  __sync_sub_and_fetch(val, x);
     pthread_log_record (0, SYNC_SUB_AND_FETCH_EXIT, (u_long) val, 1); 
     lll_unlock(sync_lock, LLL_PRIVATE);
-    head->ignore_flag--;
+    decrement_ignore_flag;
   } else if (is_replaying()) {
     head = THREAD_GETMEM (THREAD_SELF, log_head);
 
     // Enforced ordering ensures deterministic result
     pthread_log_replay (SYNC_SUB_AND_FETCH_ENTER, (u_long) val); 
-    head->ignore_flag++;
+    increment_ignore_flag;
     ret =  __sync_sub_and_fetch(val, x);
-    head->ignore_flag--;
+    decrement_ignore_flag;
     pthread_log_replay (SYNC_SUB_AND_FETCH_EXIT, (u_long) val); 
   } else {
     ret =  __sync_sub_and_fetch(val, x);
