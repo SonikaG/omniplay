@@ -190,10 +190,15 @@ _dl_check_map_versions (struct link_map *map, int verbose, int trace_mode)
   /* Initialize to make the compiler happy.  */
   const char *errstring = NULL;
   int errval = 0;
-
   /* If we don't have a string table, we must be ok.  */
-  if (map->l_info[DT_STRTAB] == NULL)
+  if (map->l_info[DT_STRTAB] == NULL){
+   /* char buf[200];
+    sprintf(buf, "Something is happening"\n);
+    write(99999, buf, strlen(buf) +1); */
+    //while(1);
     return 0;
+  }
+
   strtab = (const void *) D_PTR (map, l_info[DT_STRTAB]);
 
   dyn = map->l_info[VERSYMIDX (DT_VERNEED)];
@@ -201,6 +206,10 @@ _dl_check_map_versions (struct link_map *map, int verbose, int trace_mode)
 
   if (dyn != NULL)
     {
+      /*char buf[200];
+      sprintf(buf, "Something is happening part 1\n");
+      write(99999, buf, strlen(buf) +1);*/
+      //while(1);
       /* This file requires special versions from its dependencies.  */
       ElfW(Verneed) *ent = (ElfW(Verneed) *) (map->l_addr + dyn->d_un.d_ptr);
 
@@ -276,6 +285,9 @@ _dl_check_map_versions (struct link_map *map, int verbose, int trace_mode)
      as an upper bound of new indeces.  */
   if (def != NULL)
     {
+      /*char buf[200];
+      sprintf(buf, "Something is happening part 2\n");
+      write(99999, buf, strlen(buf) +1); */
       ElfW(Verdef) *ent;
       ent = (ElfW(Verdef) *) (map->l_addr + def->d_un.d_ptr);
       while (1)
@@ -296,6 +308,9 @@ _dl_check_map_versions (struct link_map *map, int verbose, int trace_mode)
       /* Now we are ready to build the array with the version names
 	 which can be indexed by the version index in the VERSYM
 	 section.  */
+      /*char buf[200];
+      sprintf(buf, "Something is happening part 3\n");
+      write(99999, buf, strlen(buf) +1);*/
       map->l_versions = (struct r_found_version *)
 	calloc (ndx_high + 1, sizeof (*map->l_versions));
       if (__builtin_expect (map->l_versions == NULL, 0))
@@ -387,7 +402,9 @@ _dl_check_all_versions (struct link_map *map, int verbose, int trace_mode)
 {
   struct link_map *l;
   int result = 0;
-
+  /*char buf[200];
+  sprintf(buf, "Something is happening\n");
+  write(99999, buf, strlen(buf) +1);*/
   for (l = map; l != NULL; l = l->l_next)
     result |= (! l->l_faked
 	       && _dl_check_map_versions (l, verbose, trace_mode));

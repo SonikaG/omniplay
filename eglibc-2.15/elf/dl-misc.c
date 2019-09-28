@@ -86,7 +86,7 @@ _dl_debug_vdprintf (int fd, int tag_p, const char *fmt, va_list arg)
   int niov = 0;
   pid_t pid = 0;
   char pidbuf[12];
-
+  //while(1);
   while (*fmt != '\0')
     {
       const char *startp = fmt;
@@ -243,7 +243,7 @@ _dl_debug_vdprintf (int fd, int tag_p, const char *fmt, va_list arg)
 #ifdef HAVE_INLINED_SYSCALLS
   INTERNAL_SYSCALL_DECL (err);
   INTERNAL_SYSCALL (writev, err, 3, fd, &iov, niov);
-#elif RTLD_PRIVATE_ERRNO
+#elif RTLD_PRIVATE_ERRNO 
   /* We have to take this lock just to be sure we don't clobber the private
      errno when it's being used by another thread that cares about it.
      Yet we must be sure not to try calling the lock functions before

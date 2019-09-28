@@ -38,7 +38,9 @@
 #include <sysdep.h>
 
 #include <dl-dst.h>
-
+//#include <stdio.h>
+//#include <stdio_ext.h>
+#include <stdarg.h>
 /* On some systems, no flag bits are given to specify file mapping.  */
 #ifndef MAP_FILE
 # define MAP_FILE	0
@@ -153,6 +155,123 @@ static const size_t system_dirs_len[] =
 #define nsystem_dirs_len \
   (sizeof (system_dirs_len) / sizeof (system_dirs_len[0]))
 
+//function to copy over part of one buffer into another
+void copy (char *buf, char *input, int offset, int length){
+    int i;
+    for(i = 0; i < length; i++){
+      buf[offset + i] = input[i];
+    }
+}
+//swap, reverse and itoa from: https://www.techiedelight.com/implement-itoa-function-in-c/
+// function to swap two numbers
+void swap(char *x, char *y) {
+    char t = *x; *x = *y; *y = t;
+}
+
+// function to reverse buffer[i..j]
+char* reverse(char *buffer, int i, int j)
+{
+    while (i < j)
+    swap(&buffer[i++], &buffer[j--]);
+
+    return buffer;
+}
+
+int itoa(int value, char* buffer, int base)
+{
+    // invalid input
+    if (base < 2 || base > 32)
+    return strlen(buffer);
+
+    // consider absolute value of number
+    int n = abs(value);
+
+    int i = 0;
+    while (n)
+    {
+        int r = n % base;
+
+        if (r >= 10)
+        buffer[i++] = 65 + (r - 10);
+        else
+        buffer[i++] = 48 + r;
+
+        n = n / base;
+    }
+
+    // if number is 0
+    if (i == 0)
+    buffer[i++] = '0';
+
+    // If base is 10 and value is negative, the resulting string
+    // is preceded with a minus sign (-)
+    // With any other base, value is always considered unsigned
+    if (value < 0 && base == 10)
+        buffer[i++] = '-';
+
+    buffer[i] = '\0'; // null terminate string
+
+   // reverse the string and return it
+   reverse(buffer, 0, i - 1);
+   return i;
+}
+
+//modified from https://stackoverflow.com/questions/16647278/minimal-implementation-of-sprintf-or-printf
+int my_sprintf(char *buf, char const *fmt, va_list arg) {
+
+    int int_temp;
+    char char_temp;
+    char *string_temp;
+    double double_temp;
+
+    char ch;
+    int length = 0;
+
+    char buffer[512];
+    while ( ch = *fmt++) {
+        if ( '%' == ch ) {
+            switch (ch = *fmt++) {
+
+                /* %c: print out a character    */
+                case 'c':
+                    char_temp = va_arg(arg, int);
+                    copy(buf, &char_temp, length, 1);
+                    length++;
+                    break;
+
+                /* %s: print out a string       */
+                case 's':
+                    string_temp = va_arg(arg, char *);
+                    copy(buf, string_temp, length, strlen(string_temp));
+                    length += strlen(string_temp);
+                    break;
+
+                /* %d: print out an int         */
+                case 'd':
+                    int_temp = va_arg(arg, int);
+                    int size = itoa(int_temp, buffer, 10);
+                    copy(buf, buffer, length, strlen(buffer));
+                    length += strlen(buffer);
+                    break;
+            }
+        }
+        else {
+            copy(buf, &ch, length, 1);
+            length++;
+        }
+    }
+    buf[length] = '\0';
+    return length;
+}
+
+int s_sprintf(char* buf, char const *fmt, ...){
+  va_list arg;
+  int length;
+  va_start(arg, fmt);
+  length=my_sprintf(buf, fmt, arg);
+  va_end(arg);
+  return length;
+}
 
 /* Local version of `strdup' function.  */
 static char *
@@ -2065,6 +2184,9 @@ _dl_map_object (struct link_map *loader, const char *name,
   char *name_copy;
   struct link_map *l;
   struct filebuf fb;
+  /*char buf[200];
+  sprintf(buf, "dl_map_object 1\n");
+  write(99999, buf, strlen(buf) +1);*/
 
   assert (nsid >= 0);
   assert (nsid < GL(dl_nns));
@@ -2072,6 +2194,10 @@ _dl_map_object (struct link_map *loader, const char *name,
   /* Look for this name among those already loaded.  */
   for (l = GL(dl_ns)[nsid]._ns_loaded; l; l = l->l_next)
     {
+      char buf[200];
+      sprintf(buf, "dl_map_object 2\n");
+      write(99999, buf, strlen(buf) +1);
+
       /* If the requested name matches the soname of a loaded object,
 	 use that object.  Elide this check for names that have not
 	 yet been opened.  */
@@ -2080,20 +2206,36 @@ _dl_map_object (struct link_map *loader, const char *name,
 	continue;
       if (!_dl_name_match_p (name, l))
 	{
+	  char buf[200];
+	  sprintf(buf, "dl_map_object 3\n");
+	  write(99999, buf, strlen(buf) +1);
+
 	  const char *soname;
 
 	  if (__builtin_expect (l->l_soname_added, 1)
-	      || l->l_info[DT_SONAME] == NULL)
+	      || l->l_info[DT_SONAME] == NULL){
+            char buf[200];
+            sprintf(buf, "dl_map_object 3.3\n");
+            write(99999, buf, strlen(buf) +1);
 	    continue;
-
+	  }
 	  soname = ((const char *) D_PTR (l, l_info[DT_STRTAB])
 		    + l->l_info[DT_SONAME]->d_un.d_val);
-	  if (strcmp (name, soname) != 0)
-	    continue;
 
+          s_sprintf(buf, "soname: %s name: %s\n", soname, name);
+          write(99999, buf, strlen(buf));
+
+	  if (strcmp (name, soname) != 0){
+            char buf[200];
+            sprintf(buf, "dl_map_object 3.6\n");
+            write(99999, buf, strlen(buf) +1);
+	    continue;
+	  }
 	  /* We have a match on a new name -- cache it.  */
 	  add_name_to_object (l, soname);
 	  l->l_soname_added = 1;
+	  /*s_sprintf(buf, "soname: %s name: %s\n", soname, name);
+	  write(99999, buf, strlen(buf));*/
 	}
 
       /* We have a match.  */
@@ -2109,21 +2251,38 @@ _dl_map_object (struct link_map *loader, const char *name,
 		      name, nsid, loader->l_name[0]
 		      ? loader->l_name : rtld_progname, loader->l_ns);
 
+  char buf[200];
+  sprintf(buf, "dl_map_object 4\n");
+  write(99999, buf, strlen(buf) +1);
+
 #ifdef SHARED
   /* Give the auditing libraries a chance to change the name before we
      try anything.  */
   if (__builtin_expect (GLRO(dl_naudit) > 0, 0)
       && (loader == NULL || loader->l_auditing == 0))
     {
+
+      /*char buf[200];
+      sprintf(buf, "dl_map_object 5\n");
+      write(99999, buf, strlen(buf) +1);*/
+
       struct audit_ifaces *afct = GLRO(dl_audit);
       for (unsigned int cnt = 0; cnt < GLRO(dl_naudit); ++cnt)
 	{
 	  if (afct->objsearch != NULL)
 	    {
+	      char buf[200];
+	      sprintf(buf, "dl_map_object 6\n");
+	      write(99999, buf, strlen(buf) +1);
+
 	      name = afct->objsearch (name, &loader->l_audit[cnt].cookie,
 				      LA_SER_ORIG);
 	      if (name == NULL)
 		{
+		  char buf[200];
+		  sprintf(buf, "dl_map_object 7\n");
+		  write(99999, buf, strlen(buf) +1);
+
 		  /* Do not try anything further.  */
 		  fd = -1;
 		  goto no_file;
@@ -2140,6 +2299,10 @@ _dl_map_object (struct link_map *loader, const char *name,
 
   if (strchr (name, '/') == NULL)
     {
+      char buf[200];
+      sprintf(buf, "dl_map_object 8\n");
+      write(99999, buf, strlen(buf) +1);
+
       /* Search for NAME in several places.  */
       size_t namelen = strlen (name) + 1;
 
@@ -2152,6 +2315,11 @@ _dl_map_object (struct link_map *loader, const char *name,
 	 RPATHs.  */
       if (loader == NULL || loader->l_info[DT_RUNPATH] == NULL)
 	{
+
+	  char buf[200];
+	  sprintf(buf, "dl_map_object 9\n");
+	  write(99999, buf, strlen(buf) +1);
+
 	  /* This is the executable's map (if there is one).  Make sure that
 	     we do not look at it twice.  */
 	  struct link_map *main_map = GL(dl_ns)[LM_ID_BASE]._ns_loaded;
@@ -2162,6 +2330,10 @@ _dl_map_object (struct link_map *loader, const char *name,
 	  for (l = loader; l; l = l->l_loader)
 	    if (cache_rpath (l, &l->l_rpath_dirs, DT_RPATH, "RPATH"))
 	      {
+		char buf[200];
+		sprintf(buf, "dl_map_object 10\n");
+		write(99999, buf, strlen(buf) +1);
+
 		fd = open_path (name, namelen, mode & __RTLD_SECURE,
 				&l->l_rpath_dirs,
 				&realname, &fb, loader, LA_SER_RUNPATH,
@@ -2184,12 +2356,17 @@ _dl_map_object (struct link_map *loader, const char *name,
 			    &found_other_class);
 	}
 
+      sprintf(buf, "dl_map_object 11\n");
+      write(99999, buf, strlen(buf) +1);
+
       /* Try the LD_LIBRARY_PATH environment variable.  */
       if (fd == -1 && env_path_list.dirs != (void *) -1)
 	fd = open_path (name, namelen, mode & __RTLD_SECURE, &env_path_list,
 			&realname, &fb,
 			loader ?: GL(dl_ns)[LM_ID_BASE]._ns_loaded,
 			LA_SER_LIBPATH, &found_other_class);
+      sprintf(buf, "dl_map_object 12\n");
+      write(99999, buf, strlen(buf) +1);
 
       /* Look at the RUNPATH information for this binary.  */
       if (fd == -1 && loader != NULL
@@ -2198,11 +2375,17 @@ _dl_map_object (struct link_map *loader, const char *name,
 	fd = open_path (name, namelen, mode & __RTLD_SECURE,
 			&loader->l_runpath_dirs, &realname, &fb, loader,
 			LA_SER_RUNPATH, &found_other_class);
+      sprintf(buf, "dl_map_object 13\n");
+      write(99999, buf, strlen(buf) +1);
 
       if (fd == -1
 	  && (__builtin_expect (! (mode & __RTLD_SECURE), 1)
 	      || ! INTUSE(__libc_enable_secure)))
 	{
+	  char buf[200];
+ 	  sprintf(buf, "dl_map_object 14\n");
+      	  write(99999, buf, strlen(buf) +1);
+
 	  /* Check the list of libraries in the file /etc/ld.so.cache,
 	     for compatibility with Linux's ldconfig program.  */
 	  const char *cached = _dl_load_cache_lookup (name);
@@ -2210,6 +2393,9 @@ _dl_map_object (struct link_map *loader, const char *name,
 	  if (cached != NULL)
 	    {
 #ifdef SHARED
+              char buf[200];
+              sprintf(buf, "dl_map_object 14\n");
+              write(99999, buf, strlen(buf) +1);
 	      // XXX Correct to unconditionally default to namespace 0?
 	      l = (loader
 		   ?: GL(dl_ns)[LM_ID_BASE]._ns_loaded
@@ -2227,6 +2413,10 @@ _dl_map_object (struct link_map *loader, const char *name,
 #endif
 		  __builtin_expect (l->l_flags_1 & DF_1_NODEFLIB, 0))
 		{
+
+          	  char buf[200];
+          	  sprintf(buf, "dl_map_object 15\n");
+          	  write(99999, buf, strlen(buf) +1);
 		  const char *dirp = system_dirs;
 		  unsigned int cnt = 0;
 
@@ -2234,6 +2424,9 @@ _dl_map_object (struct link_map *loader, const char *name,
 		    {
 		      if (memcmp (cached, dirp, system_dirs_len[cnt]) == 0)
 			{
+		          char buf[200];
+		          sprintf(buf, "dl_map_object 16\n");
+		          write(99999, buf, strlen(buf) +1);
 			  /* The prefix matches.  Don't use the entry.  */
 			  cached = NULL;
 			  break;
@@ -2247,11 +2440,17 @@ _dl_map_object (struct link_map *loader, const char *name,
 
 	      if (cached != NULL)
 		{
+         	  char buf[200];
+         	  sprintf(buf, "dl_map_object 17\n");
+         	  write(99999, buf, strlen(buf) +1);
 		  fd = open_verify (cached,
 				    &fb, loader ?: GL(dl_ns)[nsid]._ns_loaded,
 				    LA_SER_CONFIG, &found_other_class, false);
 		  if (__builtin_expect (fd != -1, 1))
 		    {
+         	      char buf[200];
+         	      sprintf(buf, "dl_map_object 18\n");
+          	      write(99999, buf, strlen(buf) +1);
 		      realname = local_strdup (cached);
 		      if (realname == NULL)
 			{
@@ -2277,6 +2476,9 @@ _dl_map_object (struct link_map *loader, const char *name,
     }
   else
     {
+      char buf[200];
+      sprintf(buf, "dl_map_object 19\n");
+      write(99999, buf, strlen(buf) +1);
       /* The path may contain dynamic string tokens.  */
       realname = (loader
 		  ? expand_dynamic_string_token (loader, name, 0)
@@ -2285,6 +2487,9 @@ _dl_map_object (struct link_map *loader, const char *name,
 	fd = -1;
       else
 	{
+          char buf[200];
+          sprintf(buf, "dl_map_object 20\n");
+          write(99999, buf, strlen(buf) +1);
 	  fd = open_verify (realname, &fb,
 			    loader ?: GL(dl_ns)[nsid]._ns_loaded, 0,
 			    &found_other_class, true);
@@ -2304,10 +2509,16 @@ _dl_map_object (struct link_map *loader, const char *name,
 
   if (__builtin_expect (fd, 0) == -1)
     {
+      char buf[200];
+      sprintf(buf, "dl_map_object 21\n");
+      write(99999, buf, strlen(buf) +1);
       if (trace_mode
 	  && __builtin_expect (GLRO_dl_debug_mask & DL_DEBUG_PRELINK, 0) == 0)
 	{
-	  /* We haven't found an appropriate library.  But since we
+
+          char buf[200];
+          sprintf(buf, "dl_map_object 22\n");
+          write(99999, buf, strlen(buf) +1);	  /* We haven't found an appropriate library.  But since we
 	     are only interested in the list of libraries this isn't
 	     so severe.  Fake an entry with all the information we
 	     have.  */
@@ -2318,6 +2529,9 @@ _dl_map_object (struct link_map *loader, const char *name,
 	      || (l = _dl_new_object (name_copy, name, type, loader,
 				      mode, nsid)) == NULL)
 	    {
+              char buf[200];
+              sprintf(buf, "dl_map_object 23\n");
+              write(99999, buf, strlen(buf) +1);
 	      free (name_copy);
 	      _dl_signal_error (ENOMEM, name, NULL,
 				N_("cannot create shared object descriptor"));
@@ -2333,7 +2547,8 @@ _dl_map_object (struct link_map *loader, const char *name,
 
 	  /* Enter the object in the object list.  */
 	  _dl_add_to_namespace_list (l, nsid);
-
+          sprintf(buf, "dl_map_object 24\n");
+          write(99999, buf, strlen(buf) +1);
 	  return l;
 	}
       else if (found_other_class)

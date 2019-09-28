@@ -158,6 +158,11 @@ internal_function
 _dl_catch_error (const char **objname, const char **errstring,
 		 bool *mallocedp, void (*operate) (void *), void *args)
 {
+  char buf[200];
+  sprintf(buf, "dl_catch 1\n");
+  write(99999, buf, strlen(buf) +1);
+
+
   int errcode;
   struct catch *volatile old;
   struct catch c;
@@ -167,13 +172,20 @@ _dl_catch_error (const char **objname, const char **errstring,
   /* Some systems (e.g., SPARC) handle constructors to local variables
      inefficient.  So we initialize `c' by hand.  */
   c.errstring = NULL;
-
+  sprintf(buf, "dl_catch 2\n");
+  write(99999, buf, strlen(buf) +1);
   struct catch **const catchp = &CATCH_HOOK;
   old = *catchp;
   /* Do not save the signal mask.  */
   errcode = __sigsetjmp (c.env, 0);
+  sprintf(buf, "dl_catch 3\n");
+  write(99999, buf, strlen(buf) +1);
+
   if (__builtin_expect (errcode, 0) == 0)
     {
+    char buf[200];
+    sprintf(buf, "dl_catch 4\n");
+    write(99999, buf, strlen(buf) +1);
       *catchp = &c;
       (*operate) (args);
       *catchp = old;
@@ -182,12 +194,15 @@ _dl_catch_error (const char **objname, const char **errstring,
       *mallocedp = false;
       return 0;
     }
-
+  sprintf(buf, "dl_catch 5\n");
+  write(99999, buf, strlen(buf) +1);
   /* We get here only if we longjmp'd out of OPERATE.  */
   *catchp = old;
   *objname = c.objname;
   *errstring = c.errstring;
   *mallocedp = c.malloced;
+  sprintf(buf, "dl_catch 6\n");
+  write(99999, buf, strlen(buf) +1);
   return errcode == -1 ? 0 : errcode;
 }
 
@@ -199,7 +214,9 @@ _dl_receive_error (receiver_fct fct, void (*operate) (void *), void *args)
   struct catch **const catchp = &CATCH_HOOK;
   struct catch *old_catch;
   receiver_fct old_receiver;
-
+  /*char buf[200];
+  sprintf(buf, "Something is happening\n");
+  write(99999, buf, strlen(buf) +1);*/
   old_catch = *catchp;
   old_receiver = receiver;
 

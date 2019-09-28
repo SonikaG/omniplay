@@ -2374,6 +2374,9 @@ static void* sYSMALLOc(INTERNAL_SIZE_T nb, mstate av)
   size_t          pagemask  = GLRO(dl_pagesize) - 1;
   bool            tried_mmap = false;
 
+  char buf[200];
+  sprintf(buf, "sYSMALLOc here 1\n");
+  write(99999, buf, strlen(buf) +1);
 
   /*
     If have mmap, and the request size meets the mmap threshold, and
@@ -2385,9 +2388,16 @@ static void* sYSMALLOc(INTERNAL_SIZE_T nb, mstate av)
   if ((unsigned long)(nb) >= (unsigned long)(mp_.mmap_threshold) &&
       (mp_.n_mmaps < mp_.n_mmaps_max)) {
 
+    char buf[200];
+    sprintf(buf, "sYSMALLOc here 2\n");
+    write(99999, buf, strlen(buf) +1);
+
     char* mm;             /* return value from mmap call*/
 
   try_mmap:
+    sprintf(buf, "sYSMALLOc here 3\n");
+    write(99999, buf, strlen(buf) +1);
+
     /*
       Round up size to nearest page.  For mmapped chunks, the overhead
       is one SIZE_SZ unit larger than for normal chunks, because there
@@ -2401,9 +2411,17 @@ static void* sYSMALLOc(INTERNAL_SIZE_T nb, mstate av)
     /* Don't try if size wraps around 0 */
     if ((unsigned long)(size) > (unsigned long)(nb)) {
 
+      char buf[200];
+      sprintf(buf, "sYSMALLOc here 4\n");
+      write(99999, buf, strlen(buf) +1);
+
       mm = (char*)(MMAP(0, size, PROT_READ|PROT_WRITE, MAP_PRIVATE));
 
       if (mm != MAP_FAILED) {
+
+	char buf[200];
+   	sprintf(buf, "sYSMALLOc here 5\n");
+    	write(99999, buf, strlen(buf) +1);
 
 	/*
 	  The offset to the start of the mmapped region is stored
@@ -2416,6 +2434,8 @@ static void* sYSMALLOc(INTERNAL_SIZE_T nb, mstate av)
 	  MALLOC_ALIGN_MASK is 2*SIZE_SZ-1.  Each mmap'ed area is page
 	  aligned and therefore definitely MALLOC_ALIGN_MASK-aligned.  */
 	assert (((INTERNAL_SIZE_T)chunk2mem(mm) & MALLOC_ALIGN_MASK) == 0);
+    	sprintf(buf, "sYSMALLOc here 6\n");
+    	write(99999, buf, strlen(buf) +1);
 
 	p = (mchunkptr)mm;
 	set_head(p, size|IS_MMAPPED);
@@ -2424,6 +2444,8 @@ static void* sYSMALLOc(INTERNAL_SIZE_T nb, mstate av)
 
 	if (++mp_.n_mmaps > mp_.max_n_mmaps)
 	  mp_.max_n_mmaps = mp_.n_mmaps;
+    	sprintf(buf, "sYSMALLOc here 7\n");
+    	write(99999, buf, strlen(buf) +1);
 
 	sum = mp_.mmapped_mem += size;
 	if (sum > (unsigned long)(mp_.max_mmapped_mem))
@@ -2443,6 +2465,8 @@ static void* sYSMALLOc(INTERNAL_SIZE_T nb, mstate av)
   old_end  = (char*)(chunk_at_offset(old_top, old_size));
 
   brk = snd_brk = (char*)(MORECORE_FAILURE);
+  sprintf(buf, "sYSMALLOc here 8\n");
+  write(99999, buf, strlen(buf) +1);
 
   /*
      If not the first time through, we require old_size to be
@@ -2462,18 +2486,32 @@ static void* sYSMALLOc(INTERNAL_SIZE_T nb, mstate av)
 
     heap_info *old_heap, *heap;
     size_t old_heap_size;
+    char buf[200];
+    sprintf(buf, "sYSMALLOc here 9\n");
+    write(99999, buf, strlen(buf) +1);
 
     /* First try to extend the current heap. */
     old_heap = heap_for_ptr(old_top);
     old_heap_size = old_heap->size;
     if ((long) (MINSIZE + nb - old_size) > 0
 	&& grow_heap(old_heap, MINSIZE + nb - old_size) == 0) {
+
+      char buf[200];
+      sprintf(buf, "sYSMALLOc here 10\n");
+      write(99999, buf, strlen(buf) +1);
+
+
       av->system_mem += old_heap->size - old_heap_size;
       arena_mem += old_heap->size - old_heap_size;
       set_head(old_top, (((char *)old_heap + old_heap->size) - (char *)old_top)
 	       | PREV_INUSE);
     }
     else if ((heap = new_heap(nb + (MINSIZE + sizeof(*heap)), mp_.top_pad))) {
+
+      char buf[200];
+      sprintf(buf, "sYSMALLOc here 11\n");
+      write(99999, buf, strlen(buf) +1);
+
       /* Use a newly allocated heap.  */
       heap->ar_ptr = av;
       heap->prev = old_heap;
@@ -2490,11 +2528,17 @@ static void* sYSMALLOc(INTERNAL_SIZE_T nb, mstate av)
       old_size -= MINSIZE;
       set_head(chunk_at_offset(old_top, old_size + 2*SIZE_SZ), 0|PREV_INUSE);
       if (old_size >= MINSIZE) {
+        char buf[200];
+        sprintf(buf, "sYSMALLOc here 12\n");
+        write(99999, buf, strlen(buf) +1);
 	set_head(chunk_at_offset(old_top, old_size), (2*SIZE_SZ)|PREV_INUSE);
 	set_foot(chunk_at_offset(old_top, old_size), (2*SIZE_SZ));
 	set_head(old_top, old_size|PREV_INUSE|NON_MAIN_ARENA);
 	_int_free(av, old_top, 1);
       } else {
+        char buf[200];
+        sprintf(buf, "sYSMALLOc here 13\n");
+        write(99999, buf, strlen(buf) +1);
 	set_head(old_top, (old_size + 2*SIZE_SZ)|PREV_INUSE);
 	set_foot(old_top, (old_size + 2*SIZE_SZ));
       }
@@ -2505,6 +2549,9 @@ static void* sYSMALLOc(INTERNAL_SIZE_T nb, mstate av)
 
   } else { /* av == main_arena */
 
+  char buf[200];
+  sprintf(buf, "sYSMALLOc here 14\n");
+  write(99999, buf, strlen(buf) +1);
 
   /* Request enough space for nb + pad + overhead */
 
@@ -2535,10 +2582,17 @@ static void* sYSMALLOc(INTERNAL_SIZE_T nb, mstate av)
     below even if we cannot call MORECORE.
   */
 
-  if (size > 0)
+  if (size > 0){
     brk = (char*)(MORECORE(size));
-
+    char buf[200];
+    sprintf(buf, "sYSMALLOc here 15\n");
+    write(99999, buf, strlen(buf) +1);
+  } 
   if (brk != (char*)(MORECORE_FAILURE)) {
+    char buf[200];
+    sprintf(buf, "sYSMALLOc here 16\n");
+    write(99999, buf, strlen(buf) +1);
+
     /* Call the `morecore' hook if necessary.  */
     void (*hook) (void) = force_reg (__after_morecore_hook);
     if (__builtin_expect (hook != NULL, 0))
@@ -2552,6 +2606,9 @@ static void* sYSMALLOc(INTERNAL_SIZE_T nb, mstate av)
     and threshold limits, since the space will not be used as a
     segregated mmap region.
   */
+    char buf[200];
+    sprintf(buf, "sYSMALLOc here 17\n");
+    write(99999, buf, strlen(buf) +1);
 
     /* Cannot merge with old top, so add its size back in */
     if (contiguous(av))
@@ -2563,10 +2620,16 @@ static void* sYSMALLOc(INTERNAL_SIZE_T nb, mstate av)
 
     /* Don't try if size wraps around 0 */
     if ((unsigned long)(size) > (unsigned long)(nb)) {
+      char buf[200];
+      sprintf(buf, "sYSMALLOc here 18\n");
+      write(99999, buf, strlen(buf) +1);
 
       char *mbrk = (char*)(MMAP(0, size, PROT_READ|PROT_WRITE, MAP_PRIVATE));
 
       if (mbrk != MAP_FAILED) {
+        char buf[200];
+        sprintf(buf, "sYSMALLOc here 19\n");
+        write(99999, buf, strlen(buf) +1);
 
 	/* We do not need, and cannot use, another sbrk call to find end */
 	brk = mbrk;
@@ -2584,6 +2647,10 @@ static void* sYSMALLOc(INTERNAL_SIZE_T nb, mstate av)
   }
 
   if (brk != (char*)(MORECORE_FAILURE)) {
+    char buf[200];
+    sprintf(buf, "sYSMALLOc here 20\n");
+    write(99999, buf, strlen(buf) +1);
+
     if (mp_.sbrk_base == 0)
       mp_.sbrk_base = brk;
     av->system_mem += size;
@@ -2596,6 +2663,9 @@ static void* sYSMALLOc(INTERNAL_SIZE_T nb, mstate av)
       set_head(old_top, (size + old_size) | PREV_INUSE);
 
     else if (contiguous(av) && old_size && brk < old_end) {
+      char buf[200];
+      sprintf(buf, "sYSMALLOc here 21\n");
+      write(99999, buf, strlen(buf) +1);
       /* Oops!  Someone else killed our space..  Can't touch anything.  */
       malloc_printerr (3, "break adjusted to free malloc space", brk);
     }
@@ -2620,6 +2690,10 @@ static void* sYSMALLOc(INTERNAL_SIZE_T nb, mstate av)
     */
 
     else {
+      char buf[200];
+      sprintf(buf, "sYSMALLOc here 22\n");
+      write(99999, buf, strlen(buf) +1);
+
       front_misalign = 0;
       end_misalign = 0;
       correction = 0;
@@ -2627,6 +2701,9 @@ static void* sYSMALLOc(INTERNAL_SIZE_T nb, mstate av)
 
       /* handle contiguous cases */
       if (contiguous(av)) {
+        char buf[200];
+        sprintf(buf, "sYSMALLOc here 23\n");
+        write(99999, buf, strlen(buf) +1);
 
 	/* Count foreign sbrk as system_mem.  */
 	if (old_size)
@@ -2636,6 +2713,9 @@ static void* sYSMALLOc(INTERNAL_SIZE_T nb, mstate av)
 
 	front_misalign = (INTERNAL_SIZE_T)chunk2mem(brk) & MALLOC_ALIGN_MASK;
 	if (front_misalign > 0) {
+	    char buf[200];
+            sprintf(buf, "sYSMALLOc here 24\n");
+            write(99999, buf, strlen(buf) +1);
 
 	  /*
 	    Skip over some bytes to arrive at an aligned position.
@@ -2662,7 +2742,8 @@ static void* sYSMALLOc(INTERNAL_SIZE_T nb, mstate av)
 
 	assert(correction >= 0);
 	snd_brk = (char*)(MORECORE(correction));
-
+	sprintf(buf, "correction: %d\n", correction);
+	write(99999, buf, strlen(buf)+1);
 	/*
 	  If can't allocate correction, try to at least find out current
 	  brk.  It might be enough to proceed without failing.
@@ -2676,7 +2757,14 @@ static void* sYSMALLOc(INTERNAL_SIZE_T nb, mstate av)
 	if (snd_brk == (char*)(MORECORE_FAILURE)) {
 	  correction = 0;
 	  snd_brk = (char*)(MORECORE(0));
+          char buf[200];
+          sprintf(buf, "sYSMALLOc here 25\n");
+          write(99999, buf, strlen(buf) +1);
 	} else {
+          char buf[200];
+          sprintf(buf, "sYSMALLOc here 26\n");
+          write(99999, buf, strlen(buf) +1);
+
 	  /* Call the `morecore' hook if necessary.  */
 	  void (*hook) (void) = force_reg (__after_morecore_hook);
 	  if (__builtin_expect (hook != NULL, 0))
@@ -2686,18 +2774,34 @@ static void* sYSMALLOc(INTERNAL_SIZE_T nb, mstate av)
 
       /* handle non-contiguous cases */
       else {
+        char buf[200];
+        sprintf(buf, "sYSMALLOc here 27\n");
+        write(99999, buf, strlen(buf) +1);
 	/* MORECORE/mmap must correctly align */
 	assert(((unsigned long)chunk2mem(brk) & MALLOC_ALIGN_MASK) == 0);
 
 	/* Find out current end of memory */
 	if (snd_brk == (char*)(MORECORE_FAILURE)) {
+          char buf[200];
+          sprintf(buf, "sYSMALLOc here 28\n");
+          write(99999, buf, strlen(buf) +1);
+
 	  snd_brk = (char*)(MORECORE(0));
 	}
       }
 
       /* Adjust top based on results of second sbrk */
       if (snd_brk != (char*)(MORECORE_FAILURE)) {
+        char buf[200];
+        sprintf(buf, "sYSMALLOc here 29\n");
+        write(99999, buf, strlen(buf) +1);
+        sprintf(buf, "av top:%d\n",&((av->top)->size));
+        write(99999, buf, strlen(buf) +1);
 	av->top = (mchunkptr)aligned_brk;
+	(av->top)->size = 0;
+	assert(snd_brk != NULL);
+        /*sprintf(buf, "aligned_brk:%s\n", aligned_brk);
+        write(99999, buf, strlen(buf) +1);*/
 	set_head(av->top, (snd_brk - aligned_brk + correction) | PREV_INUSE);
 	av->system_mem += correction;
 
@@ -2711,6 +2815,10 @@ static void* sYSMALLOc(INTERNAL_SIZE_T nb, mstate av)
 	*/
 
 	if (old_size != 0) {
+          char buf[200];
+          sprintf(buf, "sYSMALLOc here 30\n");
+          write(99999, buf, strlen(buf) +1);
+
 	  /*
 	     Shrink old_top to insert fenceposts, keeping size a
 	     multiple of MALLOC_ALIGNMENT. We know there is at least
@@ -2733,6 +2841,10 @@ static void* sYSMALLOc(INTERNAL_SIZE_T nb, mstate av)
 
 	  /* If possible, release the rest. */
 	  if (old_size >= MINSIZE) {
+            char buf[200];
+            sprintf(buf, "sYSMALLOc here 31\n");
+            write(99999, buf, strlen(buf) +1);
+
 	    _int_free(av, old_top, 1);
 	  }
 
@@ -2753,6 +2865,10 @@ static void* sYSMALLOc(INTERNAL_SIZE_T nb, mstate av)
 
   /* check that one of the above allocation paths succeeded */
   if ((unsigned long)(size) >= (unsigned long)(nb + MINSIZE)) {
+    char buf[200];
+    sprintf(buf, "sYSMALLOc here 31\n");
+    write(99999, buf, strlen(buf) +1);
+
     remainder_size = size - nb;
     remainder = chunk_at_offset(p, nb);
     av->top = remainder;
@@ -3484,6 +3600,10 @@ _int_malloc(mstate av, size_t bytes)
   mchunkptr       fwd;              /* misc temp for linking */
   mchunkptr       bck;              /* misc temp for linking */
 
+  char buf[200];
+  sprintf(buf, "_int_malloc 1\n");
+  write (99999, buf, strlen(buf) + 1);
+
   const char *errstr = NULL;
 
 #ifdef MUSE_EXTRA_DEBUG_LOG
@@ -3506,7 +3626,7 @@ _int_malloc(mstate av, size_t bytes)
   */
 
   checked_request2size(bytes, nb);
-
+  
   /*
     If the size qualifies as a fastbin, first check corresponding bin.
     This code is safe to execute even if av is not yet initialized, so we
@@ -3514,6 +3634,10 @@ _int_malloc(mstate av, size_t bytes)
   */
 
   if ((unsigned long)(nb) <= (unsigned long)(get_max_fast ())) {
+    char buf[200];
+    sprintf(buf, "_int_malloc 2\n");
+    write (99999, buf, strlen(buf) + 1);
+
     idx = fastbin_index(nb);
     mfastbinptr* fb = &fastbin (av, idx);
     mchunkptr pp = *fb;
@@ -3526,8 +3650,16 @@ _int_malloc(mstate av, size_t bytes)
     while ((pp = catomic_compare_and_exchange_val_acq (fb, victim->fd, victim))
 	   != victim);
     if (victim != 0) {
+      char buf[200];
+      sprintf(buf, "_int_malloc 3\n");
+      write (99999, buf, strlen(buf) + 1);
+
       if (__builtin_expect (fastbin_index (chunksize (victim)) != idx, 0))
 	{
+	  char buf[200];
+	  sprintf(buf, "_int_malloc 4\n");
+	  write (99999, buf, strlen(buf) + 1);
+
 	  errstr = "malloc(): memory corruption (fast)";
 	errout:
 	  malloc_printerr (check_action, errstr, chunk2mem (victim));
@@ -3540,6 +3672,8 @@ _int_malloc(mstate av, size_t bytes)
       return p;
     }
   }
+  sprintf(buf, "_int_malloc 5\n");
+  write (99999, buf, strlen(buf) + 1);
 
   /*
     If a small request, check regular bin.  Since these "smallbins"
@@ -3552,11 +3686,21 @@ _int_malloc(mstate av, size_t bytes)
   if (in_smallbin_range(nb)) {
     idx = smallbin_index(nb);
     bin = bin_at(av,idx);
+    char buf[200];
+    sprintf(buf, "_int_malloc 6\n");
+    write (99999, buf, strlen(buf) + 1);
 
     if ( (victim = last(bin)) != bin) {
+      char buf[200];
+      sprintf(buf, "_int_malloc 7\n");
+      write (99999, buf, strlen(buf) + 1);
+
       if (victim == 0) /* initialization check */
 	malloc_consolidate(av);
       else {
+	char buf[200];
+	sprintf(buf, "_int_malloc 8\n");
+	write (99999, buf, strlen(buf) + 1);
 	bck = victim->bk;
 	if (__builtin_expect (bck->fd != victim, 0))
 	  {
@@ -3590,6 +3734,10 @@ _int_malloc(mstate av, size_t bytes)
   */
 
   else {
+    char buf[200];
+    sprintf(buf, "_int_malloc 10\n");
+    write (99999, buf, strlen(buf) + 1);
+
     idx = largebin_index(nb);
     if (have_fastchunks(av))
       malloc_consolidate(av);
@@ -3609,9 +3757,14 @@ _int_malloc(mstate av, size_t bytes)
   */
 
   for(;;) {
-
+    char buf[200];
+    sprintf(buf, "_int_malloc 11\n");
+    write (99999, buf, strlen(buf) + 1);
     int iters = 0;
     while ( (victim = unsorted_chunks(av)->bk) != unsorted_chunks(av)) {
+      char buf[200];
+      sprintf(buf, "_int_malloc 12\n");
+      write (99999, buf, strlen(buf) + 1);
       bck = victim->bk;
       if (__builtin_expect (victim->size <= 2 * SIZE_SZ, 0)
 	  || __builtin_expect (victim->size > av->system_mem, 0))
@@ -3632,6 +3785,10 @@ _int_malloc(mstate av, size_t bytes)
 	  victim == av->last_remainder &&
 	  (unsigned long)(size) > (unsigned long)(nb + MINSIZE)) {
 
+	char buf[200];
+	sprintf(buf, "_int_malloc 13\n");
+	write (99999, buf, strlen(buf) + 1);
+
 	/* split and reattach remainder */
 	remainder_size = size - nb;
 	remainder = chunk_at_offset(victim, nb);
@@ -3640,6 +3797,10 @@ _int_malloc(mstate av, size_t bytes)
 	remainder->bk = remainder->fd = unsorted_chunks(av);
 	if (!in_smallbin_range(remainder_size))
 	  {
+	    char buf[200];
+	    sprintf(buf, "_int_malloc 14\n");
+	    write (99999, buf, strlen(buf) + 1);
+
 	    remainder->fd_nextsize = NULL;
 	    remainder->bk_nextsize = NULL;
 	  }
@@ -3659,10 +3820,15 @@ _int_malloc(mstate av, size_t bytes)
       /* remove from unsorted list */
       unsorted_chunks(av)->bk = bck;
       bck->fd = unsorted_chunks(av);
+      sprintf(buf, "_int_malloc 15\n");
+      write (99999, buf, strlen(buf) + 1);
 
       /* Take now instead of binning if exact fit */
 
       if (size == nb) {
+	char buf[200];
+	sprintf(buf, "_int_malloc 16\n");
+	write (99999, buf, strlen(buf) + 1);
 	set_inuse_bit_at_offset(victim, size);
 	if (av != &main_arena)
 	  victim->size |= NON_MAIN_ARENA;
@@ -3676,22 +3842,38 @@ _int_malloc(mstate av, size_t bytes)
       /* place chunk in bin */
 
       if (in_smallbin_range(size)) {
+	char buf[200];
+	sprintf(buf, "_int_malloc 17\n");
+	write (99999, buf, strlen(buf) + 1);
+
 	victim_index = smallbin_index(size);
 	bck = bin_at(av, victim_index);
 	fwd = bck->fd;
       }
       else {
+	char buf[200];
+	sprintf(buf, "_int_malloc 18\n");
+	write (99999, buf, strlen(buf) + 1);
+
 	victim_index = largebin_index(size);
 	bck = bin_at(av, victim_index);
 	fwd = bck->fd;
 
 	/* maintain large bins in sorted order */
 	if (fwd != bck) {
+	  char buf[200];
+	  sprintf(buf, "_int_malloc 19\n");
+	  write (99999, buf, strlen(buf) + 1);
+
 	  /* Or with inuse bit to speed comparisons */
 	  size |= PREV_INUSE;
 	  /* if smaller than smallest, bypass loop below */
 	  assert((bck->bk->size & NON_MAIN_ARENA) == 0);
 	  if ((unsigned long)(size) < (unsigned long)(bck->bk->size)) {
+	    char buf[200];
+	    sprintf(buf, "_int_malloc 20\n");
+	    write (99999, buf, strlen(buf) + 1);
+
 	    fwd = bck;
 	    bck = bck->bk;
 
@@ -3700,6 +3882,10 @@ _int_malloc(mstate av, size_t bytes)
 	    fwd->fd->bk_nextsize = victim->bk_nextsize->fd_nextsize = victim;
 	  }
 	  else {
+	    char buf[200];
+	    sprintf(buf, "_int_malloc 21\n");
+	    write (99999, buf, strlen(buf) + 1);
+
 	    assert((fwd->size & NON_MAIN_ARENA) == 0);
 	    while ((unsigned long) size < fwd->size)
 	      {
@@ -3712,6 +3898,10 @@ _int_malloc(mstate av, size_t bytes)
 	      fwd = fwd->fd;
 	    else
 	      {
+		char buf[200];
+		sprintf(buf, "_int_malloc 22\n");
+		write (99999, buf, strlen(buf) + 1);
+
 		victim->fd_nextsize = fwd;
 		victim->bk_nextsize = fwd->bk_nextsize;
 		fwd->bk_nextsize = victim;
@@ -3733,6 +3923,8 @@ _int_malloc(mstate av, size_t bytes)
       if (++iters >= MAX_ITERS)
 	break;
     }
+    sprintf(buf, "_int_malloc 23\n");
+    write (99999, buf, strlen(buf) + 1);
 
     /*
       If a large request, scan through the chunks of current bin in
@@ -3742,9 +3934,18 @@ _int_malloc(mstate av, size_t bytes)
     if (!in_smallbin_range(nb)) {
       bin = bin_at(av, idx);
 
+      char buf[200];
+      sprintf(buf, "_int_malloc 24\n");
+      write (99999, buf, strlen(buf) + 1);
+
       /* skip scan if empty or largest chunk is too small */
       if ((victim = first(bin)) != bin &&
 	  (unsigned long)(victim->size) >= (unsigned long)(nb)) {
+
+	char buf[200];
+	sprintf(buf, "_int_malloc 25\n");
+	write (99999, buf, strlen(buf) + 1);
+
 
 	victim = victim->bk_nextsize;
 	while (((unsigned long)(size = chunksize(victim)) <
@@ -3761,12 +3962,20 @@ _int_malloc(mstate av, size_t bytes)
 
 	/* Exhaust */
 	if (remainder_size < MINSIZE)  {
+	  char buf[200];
+	  sprintf(buf, "_int_malloc 26\n");
+	  write (99999, buf, strlen(buf) + 1);
+
 	  set_inuse_bit_at_offset(victim, size);
 	  if (av != &main_arena)
 	    victim->size |= NON_MAIN_ARENA;
 	}
 	/* Split */
 	else {
+	  char buf[200];
+	  sprintf(buf, "_int_malloc 27\n");
+	  write (99999, buf, strlen(buf) + 1);
+
 	  remainder = chunk_at_offset(victim, nb);
 	  /* We cannot assume the unsorted list is empty and therefore
 	     have to perform a complete insert here.  */
@@ -3774,6 +3983,10 @@ _int_malloc(mstate av, size_t bytes)
 	  fwd = bck->fd;
 	  if (__builtin_expect (fwd->bk != bck, 0))
 	    {
+	      char buf[200];
+	      sprintf(buf, "_int_malloc 28\n");
+	      write (99999, buf, strlen(buf) + 1);
+
 	      errstr = "malloc(): corrupted unsorted chunks";
 	      goto errout;
 	    }
@@ -3783,6 +3996,10 @@ _int_malloc(mstate av, size_t bytes)
 	  fwd->bk = remainder;
 	  if (!in_smallbin_range(remainder_size))
 	    {
+	      char buf[200];
+	      sprintf(buf, "_int_malloc 29\n");
+	      write (99999, buf, strlen(buf) + 1);
+
 	      remainder->fd_nextsize = NULL;
 	      remainder->bk_nextsize = NULL;
 	    }
@@ -3815,11 +4032,21 @@ _int_malloc(mstate av, size_t bytes)
     block = idx2block(idx);
     map = av->binmap[block];
     bit = idx2bit(idx);
+    sprintf(buf, "_int_malloc 30\n");
+    write (99999, buf, strlen(buf) + 1);
 
     for (;;) {
 
+      char buf[200];
+      sprintf(buf, "_int_malloc 31\n");
+      write (99999, buf, strlen(buf) + 1);
+
       /* Skip rest of block if there are no more set bits in this block.  */
       if (bit > map || bit == 0) {
+        char buf[200];
+        sprintf(buf, "_int_malloc 32\n");
+        write (99999, buf, strlen(buf) + 1);
+
 	do {
 	  if (++block >= BINMAPSIZE)  /* out of bins */
 	    goto use_top;
@@ -3831,6 +4058,10 @@ _int_malloc(mstate av, size_t bytes)
 
       /* Advance to bin with set bit. There must be one. */
       while ((bit & map) == 0) {
+	//char buf[200];
+	//sprintf(buf, "_int_malloc 33\n");
+	//write (99999, buf, strlen(buf) + 1);
+
 	bin = next_bin(bin);
 	bit <<= 1;
 	assert(bit != 0);
@@ -3841,12 +4072,20 @@ _int_malloc(mstate av, size_t bytes)
 
       /*  If a false alarm (empty bin), clear the bit. */
       if (victim == bin) {
+	char buf[200];
+	sprintf(buf, "_int_malloc 34\n");
+	write (99999, buf, strlen(buf) + 1);
+
 	av->binmap[block] = map &= ~bit; /* Write through */
 	bin = next_bin(bin);
 	bit <<= 1;
       }
 
       else {
+	char buf[200];
+	sprintf(buf, "_int_malloc 35\n");
+	write (99999, buf, strlen(buf) + 1);
+
 	size = chunksize(victim);
 
 	/*  We know the first chunk in this bin is big enough to use. */
@@ -3859,6 +4098,10 @@ _int_malloc(mstate av, size_t bytes)
 
 	/* Exhaust */
 	if (remainder_size < MINSIZE) {
+	  char buf[200];
+	  sprintf(buf, "_int_malloc 36\n");
+	  write (99999, buf, strlen(buf) + 1);
+
 	  set_inuse_bit_at_offset(victim, size);
 	  if (av != &main_arena)
 	    victim->size |= NON_MAIN_ARENA;
@@ -3867,6 +4110,9 @@ _int_malloc(mstate av, size_t bytes)
 	/* Split */
 	else {
 	  remainder = chunk_at_offset(victim, nb);
+	  char buf[200];
+	  sprintf(buf, "_int_malloc 37\n");
+	  write (99999, buf, strlen(buf) + 1);
 
 	  /* We cannot assume the unsorted list is empty and therefore
 	     have to perform a complete insert here.  */
@@ -3874,6 +4120,9 @@ _int_malloc(mstate av, size_t bytes)
 	  fwd = bck->fd;
 	  if (__builtin_expect (fwd->bk != bck, 0))
 	    {
+  	      char buf[200];
+	      sprintf(buf, "_int_malloc 38\n");
+	      write (99999, buf, strlen(buf) + 1);
 	      errstr = "malloc(): corrupted unsorted chunks 2";
 	      goto errout;
 	    }
@@ -3887,6 +4136,10 @@ _int_malloc(mstate av, size_t bytes)
 	    av->last_remainder = remainder;
 	  if (!in_smallbin_range(remainder_size))
 	    {
+	      char buf[200];
+	      sprintf(buf, "_int_malloc 39\n");
+	      write (99999, buf, strlen(buf) + 1);
+
 	      remainder->fd_nextsize = NULL;
 	      remainder->bk_nextsize = NULL;
 	    }
@@ -3918,11 +4171,17 @@ _int_malloc(mstate av, size_t bytes)
       reason for ensuring it exists is that we may need MINSIZE space
       to put in fenceposts in sysmalloc.)
     */
+    sprintf(buf, "_int_malloc 40\n");
+    write (99999, buf, strlen(buf) + 1);
 
     victim = av->top;
     size = chunksize(victim);
 
     if ((unsigned long)(size) >= (unsigned long)(nb + MINSIZE)) {
+      char buf[200];
+      sprintf(buf, "_int_malloc 41\n");
+      write (99999, buf, strlen(buf) + 1);
+
       remainder_size = size - nb;
       remainder = chunk_at_offset(victim, nb);
       av->top = remainder;
@@ -3940,6 +4199,10 @@ _int_malloc(mstate av, size_t bytes)
     /* When we are using atomic ops to free fast chunks we can get
        here for all block sizes.  */
     else if (have_fastchunks(av)) {
+      char buf[200];
+      sprintf(buf, "_int_malloc 42\n");
+      write (99999, buf, strlen(buf) + 1);
+
       malloc_consolidate(av);
       /* restore original bin index */
       if (in_smallbin_range(nb))
@@ -3952,6 +4215,10 @@ _int_malloc(mstate av, size_t bytes)
        Otherwise, relay to handle system-dependent cases
     */
     else {
+      char buf[200];
+      sprintf(buf, "_int_malloc 43\n");
+      write (99999, buf, strlen(buf) + 1);
+
       void *p = sYSMALLOc(nb, av);
       if (p != NULL && __builtin_expect (perturb_byte, 0))
 	alloc_perturb (p, bytes);

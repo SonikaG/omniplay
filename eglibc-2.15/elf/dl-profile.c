@@ -487,7 +487,10 @@ _dl_mcount (ElfW(Addr) frompc, ElfW(Addr) selfpc)
   volatile uint16_t *topcindex;
   size_t i, fromindex;
   struct here_fromstruct *fromp;
-
+  /*char buf[200];
+  while(1);
+  sprintf(buf, "Something is happening");
+  write(99999, buf, strlen(buf) +1);*/
   if (! running)
     return;
 
@@ -548,6 +551,9 @@ _dl_mcount (ElfW(Addr) frompc, ElfW(Addr) selfpc)
 	      froms[newfromidx].here = &data[narcs];
 	      froms[newfromidx].link = tos[to_index];
 	      tos[to_index] = newfromidx;
+	      /*char buf[200];
+              sprintf(buf, "Something is happening");
+	      write(99999, buf, strlen(buf) +1);*/
 	      catomic_increment (&narcs);
 	    }
 

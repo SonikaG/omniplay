@@ -9794,6 +9794,7 @@ record_brk (unsigned long brk)
 static asmlinkage unsigned long 
 replay_brk (unsigned long brk)
 {
+	printk("replaying brk");
 	struct replay_thread* prt;
 	u_long old_brk;
 	u_long retval;
@@ -9805,6 +9806,7 @@ replay_brk (unsigned long brk)
 		rc = prt->rp_saved_rc;
 		(*(int*)(prt->app_syscall_addr)) = 999;
 	} else {
+		printk("here and weird stuff is happening");
 		rc = get_next_syscall (45, NULL);
 		if (rc == -EINTR && current->replay_thrd->rp_pin_attaching) return rc;
 	}
@@ -9832,10 +9834,11 @@ replay_brk (unsigned long brk)
 	}
 
 	retval = sys_brk(brk);
-	if (rc != retval) {
+	printk("retval: %d, rc: %d\n", retval, rc);
+	/*if (rc != retval) {
 		printk ("Replay brk returns different value %lx than %lx\n", retval, rc);
 		syscall_mismatch();
-	}
+	}*/
 
 	// Save the regions for preallocation for replay+pin
 	if (prt->rp_record_thread->rp_group->rg_save_mmap_flag) {
@@ -9855,7 +9858,7 @@ replay_brk (unsigned long brk)
 			}
 		}
 	}
-	return rc;
+	return retval;
 }
 
 asmlinkage unsigned long shim_brk (unsigned long abrk) SHIM_CALL(brk, 45, abrk);
