@@ -661,9 +661,9 @@ lookup_doit (void *a)
 static void
 version_check_doit (void *a)
 {
-  /*char buf[200];
+  char buf[200];
   sprintf(buf, "Something is happening\n");
-  write(99999, buf, strlen(buf) +1);*/
+  write(99999, buf, strlen(buf) +1);
   struct version_check_args *args = (struct version_check_args *) a;
   if (_dl_check_all_versions (GL(dl_ns)[LM_ID_BASE]._ns_loaded, 1,
 			      args->dotrace) && args->doexit)
@@ -957,9 +957,9 @@ dl_main (const ElfW(Phdr) *phdr,
 	 pay attention to its PT_INTERP command (we are the interpreter
 	 ourselves).  This is an easy way to test a new ld.so before
 	 installing it.  */
-      /*char buf[200];
+      char buf[200];
       sprintf(buf, "dl_main 1 \n");
-      write(99999, buf, strlen(buf) +1);*/
+      write(99999, buf, strlen(buf) +1);
 
       rtld_is_main = true;
 
@@ -969,9 +969,9 @@ dl_main (const ElfW(Phdr) *phdr,
       while (_dl_argc > 1)
 	if (! strcmp (INTUSE(_dl_argv)[1], "--list"))
 	  {
-	    /*char buf[200];
+	    char buf[200];
             sprintf(buf, "dl_main 2\n");
-            write(99999, buf, strlen(buf) +1);*/
+            write(99999, buf, strlen(buf) +1);
 
 	    mode = list;
 	    GLRO(dl_lazy) = -1;	/* This means do no dependency analysis.  */
@@ -982,9 +982,9 @@ dl_main (const ElfW(Phdr) *phdr,
 	  }
 	else if (! strcmp (INTUSE(_dl_argv)[1], "--verify"))
 	  {
-            /*char buf[200];
+            char buf[200];
             sprintf(buf, "dl_main 3\n");
-            write(99999, buf, strlen(buf) +1);*/
+            write(99999, buf, strlen(buf) +1);
 
 	    mode = verify;
 
@@ -995,9 +995,9 @@ dl_main (const ElfW(Phdr) *phdr,
 	else if (! strcmp (INTUSE(_dl_argv)[1], "--library-path")
 		 && _dl_argc > 2)
 	  {
-            /*char buf[200];
+            char buf[200];
             sprintf(buf, "dl_main 4\n");
-            write(99999, buf, strlen(buf) +1);*/
+            write(99999, buf, strlen(buf) +1);
 
 	    library_path = INTUSE(_dl_argv)[2];
 
@@ -1008,9 +1008,9 @@ dl_main (const ElfW(Phdr) *phdr,
 	else if (! strcmp (INTUSE(_dl_argv)[1], "--inhibit-rpath")
 		 && _dl_argc > 2)
 	  {
-            /*char buf[200];
+            char buf[200];
             sprintf(buf, "dl_main 5\n");
-            write(99999, buf, strlen(buf) +1);*/
+            write(99999, buf, strlen(buf) +1);
 
 	    GLRO(dl_inhibit_rpath) = INTUSE(_dl_argv)[2];
 
@@ -1020,9 +1020,9 @@ dl_main (const ElfW(Phdr) *phdr,
 	  }
 	else if (! strcmp (INTUSE(_dl_argv)[1], "--audit") && _dl_argc > 2)
 	  {
-            /*char buf[200];
+            char buf[200];
             sprintf(buf, "dl_main 6\n");
-            write(99999, buf, strlen(buf) +1);*/
+            write(99999, buf, strlen(buf) +1);
 
 	    process_dl_audit (INTUSE(_dl_argv)[2]);
 
@@ -1078,18 +1078,18 @@ of this helper program; chances are you did not intend to run this program.\n\
       for (ph = phdr; ph < &phdr[phnum]; ++ph)
 	if (ph->p_type == PT_GNU_STACK)
 	  {
-            /*char buf[200];
+            char buf[200];
             sprintf(buf, "dl_main 7\n");
-            write(99999, buf, strlen(buf) +1);*/	  
+            write(99999, buf, strlen(buf) +1);	  
 	    GL(dl_stack_flags) = ph->p_flags;
 	    break;
 	  }
 
       if (__builtin_expect (mode, normal) == verify)
 	{
-          /*char buf[200];
+          char buf[200];
           sprintf(buf, "dl_main 8\n");
-          write(99999, buf, strlen(buf) +1);*/
+          write(99999, buf, strlen(buf) +1);
 
 	  const char *objname;
 	  const char *err_str = NULL;
@@ -1108,9 +1108,9 @@ of this helper program; chances are you did not intend to run this program.\n\
 	}
       else
 	{
-          /*char buf[200];
+          char buf[200];
           sprintf(buf, "dl_main 9\n");
-          write(99999, buf, strlen(buf) +1);*/
+          write(99999, buf, strlen(buf) +1);
 
 	  HP_TIMING_NOW (start);
 	  _dl_map_object (NULL, rtld_progname, lt_library, 0,
@@ -1129,9 +1129,9 @@ of this helper program; chances are you did not intend to run this program.\n\
 		     + GL(dl_rtld_map).l_info[DT_SONAME]->d_un.d_val,
 		     (const char *) D_PTR (main_map, l_info[DT_STRTAB])
 		     + main_map->l_info[DT_SONAME]->d_un.d_val) == 0){
-        /*char buf[200];
+        char buf[200];
         sprintf(buf, "dl_main 10\n");
-        write(99999, buf, strlen(buf) +1);*/
+        write(99999, buf, strlen(buf) +1);
 
 	_dl_fatal_printf ("loader cannot load itself\n");
       }
@@ -1165,9 +1165,9 @@ of this helper program; chances are you did not intend to run this program.\n\
     }
   else
     {
-      /*char buf[200];
+      char buf[200];
       sprintf(buf, "dl_main 11\n");
-      write(99999, buf, strlen(buf) +1);*/
+      write(99999, buf, strlen(buf) +1);
 
       /* Create a link_map for the executable itself.
 	 This will be what dlopen on "" returns.  */
@@ -1243,9 +1243,9 @@ of this helper program; chances are you did not intend to run this program.\n\
 	   be our SONAME, and add it to our name list.  */
 	if (GL(dl_rtld_map).l_ld == NULL)
 	  {
-            /*char buf[200];
+            char buf[200];
             sprintf(buf, "dl_main 12\n");
-            write(99999, buf, strlen(buf) +1);*/	   
+            write(99999, buf, strlen(buf) +1);
 	    const char *p = NULL;
 	    const char *cp = _dl_rtld_libname.name;
 
@@ -1256,9 +1256,9 @@ of this helper program; chances are you did not intend to run this program.\n\
 
 	    if (p != NULL)
 	      {
-                /*char buf[200];
+                char buf[200];
                 sprintf(buf, "dl_main 13\n");
-                write(99999, buf, strlen(buf) +1);*/
+                write(99999, buf, strlen(buf) +1);
 		_dl_rtld_libname2.name = p;
 		/* _dl_rtld_libname2.next = NULL;  Already zero.  */
 		_dl_rtld_libname.next = &_dl_rtld_libname2;
@@ -1293,9 +1293,9 @@ of this helper program; chances are you did not intend to run this program.\n\
       case PT_TLS:
 	if (ph->p_memsz > 0)
 	  {
-            /*char buf[200];
+            char buf[200];
             sprintf(buf, "dl_main 15\n");
-            write(99999, buf, strlen(buf) +1);*/
+            write(99999, buf, strlen(buf) +1);
 	    /* Note that in the case the dynamic linker we duplicate work
 	       here since we read the PT_TLS entry already in
 	       _dl_start_final.  But the result is repeatable so do not
@@ -1336,9 +1336,9 @@ of this helper program; chances are you did not intend to run this program.\n\
     main_map->l_text_end = ~0;
   if (! GL(dl_rtld_map).l_libname && GL(dl_rtld_map).l_name)
     {
-      /*char buf[200];
+      char buf[200];
       sprintf(buf, "dl_main 16\n");
-      write(99999, buf, strlen(buf) +1);*/
+      write(99999, buf, strlen(buf) +1);
       /* We were invoked directly, so the program might not have a
 	 PT_INTERP.  */
       _dl_rtld_libname.name = GL(dl_rtld_map).l_name;
@@ -1355,9 +1355,9 @@ of this helper program; chances are you did not intend to run this program.\n\
 		 (const char *) D_PTR (&GL(dl_rtld_map), l_info[DT_STRTAB])
 		 + GL(dl_rtld_map).l_info[DT_SONAME]->d_un.d_val) != 0)
     {
-      /*char buf[200];
+      char buf[200];
       sprintf(buf, "dl_main 17\n");
-      write(99999, buf, strlen(buf) +1);*/
+      write(99999, buf, strlen(buf) +1);
       static struct libname_list newname;
       newname.name = ((char *) D_PTR (&GL(dl_rtld_map), l_info[DT_STRTAB])
 		      + GL(dl_rtld_map).l_info[DT_SONAME]->d_un.d_ptr);
@@ -1373,9 +1373,9 @@ of this helper program; chances are you did not intend to run this program.\n\
 
   if (! rtld_is_main)
     {
-      /*char buf[200];
+      char buf[200];
       sprintf(buf, "dl_main 18\n");
-      write(99999, buf, strlen(buf) +1);*/
+      write(99999, buf, strlen(buf) +1);
       /* Extract the contents of the dynamic section for easy access.  */
       elf_get_dynamic_info (main_map, NULL);
       /* Set up our cache of pointers into the hash table.  */
@@ -1384,9 +1384,9 @@ of this helper program; chances are you did not intend to run this program.\n\
 
   if (__builtin_expect (mode, normal) == verify)
     {
-      /*char buf[200];
+      char buf[200];
       sprintf(buf, "dl_main 19\n");
-      write(99999, buf, strlen(buf) +1);*/
+      write(99999, buf, strlen(buf) +1);
       /* We were called just to verify that this is a dynamic
 	 executable using us as the program interpreter.  Exit with an
 	 error if we were not able to load the binary or no interpreter
@@ -1407,9 +1407,9 @@ of this helper program; chances are you did not intend to run this program.\n\
      so they can influence _dl_init_paths.  */
   if (GLRO(dl_sysinfo_dso) != NULL)
     {
-      /*char buf[200];
+      char buf[200];
       sprintf(buf, "dl_main 20\n");
-      write(99999, buf, strlen(buf) +1);*/
+      write(99999, buf, strlen(buf) +1);
       /* Do an abridged version of the work _dl_map_object_from_fd would do
 	 to map in the object.  It's already mapped and prelinked (and
 	 better be, since it's read-only and so we couldn't relocate it).
@@ -1419,9 +1419,9 @@ of this helper program; chances are you did not intend to run this program.\n\
 					   0, LM_ID_BASE);
       if (__builtin_expect (l != NULL, 1))
 	{
-          /*char buf[200];
+          char buf[200];
           sprintf(buf, "dl_main 21\n");
-          write(99999, buf, strlen(buf) +1);*/
+          write(99999, buf, strlen(buf) +1);
 	  static ElfW(Dyn) dyn_temp[DL_RO_DYN_TEMP_CNT] attribute_relro;
 
 	  l->l_phdr = ((const void *) GLRO(dl_sysinfo_dso)
@@ -1431,16 +1431,16 @@ of this helper program; chances are you did not intend to run this program.\n\
 	    {
 	      const ElfW(Phdr) *const ph = &l->l_phdr[i];
 	      if (ph->p_type == PT_DYNAMIC){
-       		/*char buf[200];
+       		char buf[200];
         	sprintf(buf, "dl_main 22\n");
-        	write(99999, buf, strlen(buf) +1);*/
+        	write(99999, buf, strlen(buf) +1);
 		  l->l_ld = (void *) ph->p_vaddr;
 		  l->l_ldnum = ph->p_memsz / sizeof (ElfW(Dyn));
 		}
 	      else if (ph->p_type == PT_LOAD){
-        	/*char buf[200];
+        	char buf[200];
         	sprintf(buf, "dl_main 23\n");
-        	write(99999, buf, strlen(buf) +1);*/
+        	write(99999, buf, strlen(buf) +1);
 		  if (! l->l_addr)
 		    l->l_addr = ph->p_vaddr;
 		  if (ph->p_vaddr + ph->p_memsz >= l->l_map_end)
@@ -1475,9 +1475,9 @@ of this helper program; chances are you did not intend to run this program.\n\
 	     and this DSO is not associated with any file.  */
 	  if (l->l_info[DT_SONAME] != NULL)
 	    {
-              /*char buf[200];
+              char buf[200];
               sprintf(buf, "dl_main 24\n");
-              write(99999, buf, strlen(buf) +1);*/
+              write(99999, buf, strlen(buf) +1);
 	      /* Work around a kernel problem.  The kernel cannot handle
 		 addresses in the vsyscall DSO pages in writev() calls.  */
 	      const char *dsoname = ((char *) D_PTR (l, l_info[DT_STRTAB])
@@ -1555,9 +1555,9 @@ of this helper program; chances are you did not intend to run this program.\n\
   while (cnt-- > 0)
     if (rtld_phdr[cnt].p_type == PT_GNU_RELRO)
       {
-        /*char buf[200];
+        char buf[200];
         sprintf(buf, "dl_main 25\n");
-        write(99999, buf, strlen(buf) +1);*/
+        write(99999, buf, strlen(buf) +1);
 	GL(dl_rtld_map).l_relro_addr = rtld_phdr[cnt].p_vaddr;
 	GL(dl_rtld_map).l_relro_size = rtld_phdr[cnt].p_memsz;
 	break;
@@ -1571,9 +1571,9 @@ of this helper program; chances are you did not intend to run this program.\n\
   /* If we have auditing DSOs to load, do it now.  */
   if (__builtin_expect (audit_list != NULL, 0))
     {
-      /*char buf[200];
+      char buf[200];
       sprintf(buf, "dl_main 26\n");
-      write(99999, buf, strlen(buf) +1);*/
+      write(99999, buf, strlen(buf) +1);
       /* Iterate over all entries in the list.  The order is important.  */
       struct audit_ifaces *last_audit = NULL;
       struct audit_list *al = audit_list->next;
@@ -1608,9 +1608,9 @@ of this helper program; chances are you did not intend to run this program.\n\
 				  &dlmargs);
 	  if (__builtin_expect (err_str != NULL, 0))
 	    {
-            /*char buf[200];
+            char buf[200];
             sprintf(buf, "dl_main 27\n");
-            write(99999, buf, strlen(buf) +1);*/
+            write(99999, buf, strlen(buf) +1);
 	    not_loaded:
 	      _dl_error_printf ("\
 ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
@@ -1620,9 +1620,9 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
 	    }
 	  else
 	    {
-              /*char buf[200];
+              char buf[200];
               sprintf(buf, "dl_main 28\n");
-              write(99999, buf, strlen(buf) +1);*/
+              write(99999, buf, strlen(buf) +1);
 	      struct lookup_args largs;
 	      largs.name = "la_version";
 	      largs.map = dlmargs.map;
@@ -1638,9 +1638,9 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
 		   && (lav = laversion (LAV_CURRENT)) > 0
 		   && lav <= LAV_CURRENT)
 		{
-                  /*char buf[200];
+                  char buf[200];
                   sprintf(buf, "dl_main 29\n");
-                  write(99999, buf, strlen(buf) +1);*/
+                  write(99999, buf, strlen(buf) +1);
 
 		  /* Allocate structure for the callback function pointers.
 		     This call can never fail.  */
@@ -1680,9 +1680,9 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
 		      /* Store the pointer.  */
 		      if (err_str == NULL && largs.result != NULL)
 			{
-                          /*char buf[200];
+                          char buf[200];
                           sprintf(buf, "dl_main 30\n");
-                          write(99999, buf, strlen(buf) +1);*/
+                          write(99999, buf, strlen(buf) +1);
 
 			  newp->fptr[cnt] = largs.result;
 
@@ -1713,9 +1713,9 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
 		}
 	      else
 		{
-                  /*char buf[200];
+                  char buf[200];
                   sprintf(buf, "dl_main 31\n");
-                  write(99999, buf, strlen(buf) +1);*/
+                  write(99999, buf, strlen(buf) +1);
 
 		  /* We cannot use the DSO, it does not have the
 		     appropriate interfaces or it expects something
@@ -1742,9 +1742,9 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
 	 have two objects loaded.  */
       if (__builtin_expect (GLRO(dl_naudit) > 0, 0))
 	{
-          /*char buf[200];
+          char buf[200];
           sprintf(buf, "dl_main 32\n");
-          write(99999, buf, strlen(buf) +1);*/
+          write(99999, buf, strlen(buf) +1);
 
 	  struct link_map *ls[2] = { main_map, &GL(dl_rtld_map) };
 
@@ -1755,9 +1755,9 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
 		{
 		  if (afct->objopen != NULL)
 		    {
-                      /*char buf[200];
+                      char buf[200];
                       sprintf(buf, "dl_main 33\n");
-                      write(99999, buf, strlen(buf) +1);*/
+                      write(99999, buf, strlen(buf) +1);
 
 		      ls[outer]->l_audit[cnt].bindflags
 			= afct->objopen (ls[outer], LM_ID_BASE,
@@ -1780,9 +1780,9 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
   ELF_MACHINE_DEBUG_SETUP (&GL(dl_rtld_map), r);
 #else
   if (main_map->l_info[DT_DEBUG] != NULL){
-    /*char buf[200];
+    char buf[200];
     sprintf(buf, "dl_main 34\n");
-    write(99999, buf, strlen(buf) +1);*/
+    write(99999, buf, strlen(buf) +1);
 
     /* There is a DT_DEBUG entry in the dynamic section.  Fill it in
        with the run-time address of the r_debug structure  */
@@ -1791,9 +1791,9 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
   /* Fill in the pointer in the dynamic linker's own dynamic section, in
      case you run gdb on the dynamic linker directly.  */
   if (GL(dl_rtld_map).l_info[DT_DEBUG] != NULL){
-    /*char buf[200];
+    char buf[200];
     sprintf(buf, "dl_main in between\n");
-    write(99999, buf, strlen(buf) +1);*/
+    write(99999, buf, strlen(buf) +1);
  
       GL(dl_rtld_map).l_info[DT_DEBUG]->d_un.d_ptr = (ElfW(Addr)) r;
   }
@@ -1807,9 +1807,9 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
      is being constructed.  */
   if (__builtin_expect (GLRO(dl_naudit) > 0, 0))
     {
-      /*char buf[200];
+      char buf[200];
       sprintf(buf, "dl_main 35\n");
-      write(99999, buf, strlen(buf) +1);*/
+      write(99999, buf, strlen(buf) +1);
 
       struct audit_ifaces *afct = GLRO(dl_audit);
       for (unsigned int cnt = 0; cnt < GLRO(dl_naudit); ++cnt)
@@ -1830,9 +1830,9 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
 
   if (__builtin_expect (preloadlist != NULL, 0))
     {
-      /*char buf[200];
+      char buf[200];
       sprintf(buf, "dl_main 36\n");
-      write(99999, buf, strlen(buf) +1);*/
+      write(99999, buf, strlen(buf) +1);
 
       /* The LD_PRELOAD environment variable gives list of libraries
 	 separated by white space or colons that are loaded before the
@@ -1865,18 +1865,18 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
   static const char preload_file[] = "/etc/ld.so.preload";
   if (__builtin_expect (__access (preload_file, R_OK) == 0, 0))
     {
-      /*char buf[200];
+      char buf[200];
       sprintf(buf, "dl_main 37\n");
-      write(99999, buf, strlen(buf) +1);*/
+      write(99999, buf, strlen(buf) +1);
 
       /* Read the contents of the file.  */
       file = _dl_sysdep_read_whole_file (preload_file, &file_size,
 					 PROT_READ | PROT_WRITE);
       if (__builtin_expect (file != MAP_FAILED, 0))
 	{
-          /*char buf[200];
+          char buf[200];
           sprintf(buf, "dl_main 38\n");
-          write(99999, buf, strlen(buf) +1);*/
+          write(99999, buf, strlen(buf) +1);
 
 	  /* Parse the file.  It contains names of libraries to be loaded,
 	     separated by white spaces or `:'.  It may also contain
@@ -1906,9 +1906,9 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
 	  if (file[file_size - 1] != ' ' && file[file_size - 1] != '\t'
 	      && file[file_size - 1] != '\n' && file[file_size - 1] != ':')
 	    {
-	     /* char buf[200];
+	      char buf[200];
 	      sprintf(buf, "dl_main 39\n");
-	      write(99999, buf, strlen(buf) +1);*/
+	      write(99999, buf, strlen(buf) +1);
 
 	      problem = &file[file_size];
 	      while (problem > file && problem[-1] != ' '
@@ -1921,9 +1921,9 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
 	    }
 	  else
 	    {
-	      /*char buf[200];
+	      char buf[200];
     	      sprintf(buf, "dl_main 40\n");
-	      write(99999, buf, strlen(buf) +1);*/
+	      write(99999, buf, strlen(buf) +1);
 
 	      problem = NULL;
 	      file[file_size - 1] = '\0';
@@ -1933,9 +1933,9 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
 
 	  if (file != problem)
 	    {
-	      /*char buf[200];
+	      char buf[200];
 	      sprintf(buf, "dl_main 41\n");
-	      write(99999, buf, strlen(buf) +1);*/
+	      write(99999, buf, strlen(buf) +1);
 
 	      char *p;
 	      runp = file;
@@ -1946,9 +1946,9 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
 
 	  if (problem != NULL)
 	    {
-	      /*char buf[200];
+	      char buf[200];
 	      sprintf(buf, "dl_main 42\n");
-	      write(99999, buf, strlen(buf) +1);*/
+	      write(99999, buf, strlen(buf) +1);
 
 	      char *p = strndupa (problem, file_size - (problem - file));
 
@@ -1966,9 +1966,9 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
 
   if (__builtin_expect (*first_preload != NULL, 0))
     {
-      /*char buf[200];
+      char buf[200];
       sprintf(buf, "dl_main 43\n");
-      write(99999, buf, strlen(buf) +1);*/
+      write(99999, buf, strlen(buf) +1);
 
       /* Set up PRELOADS with a vector of the preloaded libraries.  */
       struct link_map *l = *first_preload;
@@ -1993,33 +1993,33 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
 
   /* Mark all objects as being in the global scope.  */
   for (i = main_map->l_searchlist.r_nlist; i > 0; ){
-    /*char buf[200];
+    char buf[200];
     sprintf(buf, "dl_main in between 4\n");
-    write(99999, buf, strlen(buf) +1);*/
+    write(99999, buf, strlen(buf) +1);
     main_map->l_searchlist.r_list[--i]->l_global = 1;
   }
   /* Remove _dl_rtld_map from the chain.  */
   GL(dl_rtld_map).l_prev->l_next = GL(dl_rtld_map).l_next;
   if (GL(dl_rtld_map).l_next != NULL){
-    /*char buf[200];
+    char buf[200];
     sprintf(buf, "dl_main in between 2\n");
-    write(99999, buf, strlen(buf) +1);*/
+    write(99999, buf, strlen(buf) +1);
     GL(dl_rtld_map).l_next->l_prev = GL(dl_rtld_map).l_prev;
   }
   for (i = 1; i < main_map->l_searchlist.r_nlist; ++i){
     if (main_map->l_searchlist.r_list[i] == &GL(dl_rtld_map)){
-      /*char buf[200];
+      char buf[200];
       sprintf(buf, "dl_main in between 3\n");
-      write(99999, buf, strlen(buf) +1);*/
+      write(99999, buf, strlen(buf) +1);
       break;
     }
   }
   bool rtld_multiple_ref = false;
   if (__builtin_expect (i < main_map->l_searchlist.r_nlist, 1))
     {
-      /*char buf[200];
+      char buf[200];
       sprintf(buf, "dl_main 44\n");
-      write(99999, buf, strlen(buf) +1);*/
+      write(99999, buf, strlen(buf) +1);
 
       /* Some DT_NEEDED entry referred to the interpreter object itself, so
 	 put it back in the list of visible objects.  We insert it into the
@@ -2030,9 +2030,9 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
       GL(dl_rtld_map).l_prev = main_map->l_searchlist.r_list[i - 1];
       if (__builtin_expect (mode, normal) == normal)
 	{
-	  /*char buf[200];
+	  char buf[200];
 	  sprintf(buf, "dl_main 45\n");
-	  write(99999, buf, strlen(buf) +1);*/
+	  write(99999, buf, strlen(buf) +1);
 
 	  GL(dl_rtld_map).l_next = (i + 1 < main_map->l_searchlist.r_nlist
 				    ? main_map->l_searchlist.r_list[i + 1]
@@ -2056,9 +2056,9 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
       GL(dl_rtld_map).l_prev->l_next = &GL(dl_rtld_map);
       if (GL(dl_rtld_map).l_next != NULL)
 	{
-	  /*char buf[200];
+	  char buf[200];
 	  sprintf(buf, "dl_main 46\n");
-	  write(99999, buf, strlen(buf) +1);*/
+	  write(99999, buf, strlen(buf) +1);
 
 	  assert (GL(dl_rtld_map).l_next->l_prev == GL(dl_rtld_map).l_prev);
 	  GL(dl_rtld_map).l_next->l_prev = &GL(dl_rtld_map);
@@ -2092,9 +2092,9 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
 
   if (__builtin_expect (mode, normal) != normal)
     {
-      /*char buf[200];
+      char buf[200];
       sprintf(buf, "dl_main 47\n");
-      write(99999, buf, strlen(buf) +1);*/
+      write(99999, buf, strlen(buf) +1);
 
       /* We were run just to list the shared libraries.  It is
 	 important that we do this before real relocation, because the
@@ -2104,9 +2104,9 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
 
       if (GLRO_dl_debug_mask & DL_DEBUG_PRELINK)
 	{
-	  /*char buf[200];
+	  char buf[200];
 	  sprintf(buf, "dl_main 48\n");
-	  write(99999, buf, strlen(buf) +1);*/
+	  write(99999, buf, strlen(buf) +1);
 
 	  struct r_scope_elem *scope = &main_map->l_searchlist;
 
@@ -2115,9 +2115,9 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
 	      l = scope->r_list [i];
 	      if (l->l_faked)
 		{
-		  /*char buf[200];
+		  char buf[200];
     		  sprintf(buf, "dl_main 49\n");
-    		  write(99999, buf, strlen(buf) +1);*/
+    		  write(99999, buf, strlen(buf) +1);
 
 		  _dl_printf ("\t%s => not found\n", l->l_libname->name);
 		  continue;
@@ -2144,9 +2144,9 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
 	}
       else if (GLRO_dl_debug_mask & DL_DEBUG_UNUSED)
 	{
-	  /*char buf[200];
+	  char buf[200];
     	  sprintf(buf, "dl_main 50\n");
-    	  write(99999, buf, strlen(buf) +1);*/
+    	  write(99999, buf, strlen(buf) +1);
 
 	  /* Look through the dependencies of the main executable
 	     and determine which of them is not actually
@@ -2174,9 +2174,9 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
 		    {
 		      if (first)
 			{
-			  /*char buf[200];
+			  char buf[200];
     			  sprintf(buf, "dl_main 51\n");
-    			  write(99999, buf, strlen(buf) +1);*/
+    			  write(99999, buf, strlen(buf) +1);
 
 			  _dl_printf ("Unused direct dependencies:\n");
 			  first = false;
@@ -2195,9 +2195,9 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
 	_dl_printf ("\tstatically linked\n");
       else
 	{
-	  /*char buf[200];
+	  char buf[200];
     	  sprintf(buf, "dl_main 52\n");
-    	  write(99999, buf, strlen(buf) +1);*/
+    	  write(99999, buf, strlen(buf) +1);
 
 	  for (l = main_map->l_next; l; l = l->l_next)
 	    if (l->l_faked)
@@ -2235,16 +2235,16 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
 	  }
       else
 	{
-          /*char buf[200];
+          char buf[200];
           sprintf(buf, "dl_main 53\n");
-          write(99999, buf, strlen(buf) +1);*/
+          write(99999, buf, strlen(buf) +1);
 
 	  /* If LD_WARN is set, warn about undefined symbols.  */
 	  if (GLRO(dl_lazy) >= 0 && GLRO(dl_verbose))
 	    {
-	      /*char buf[200];
+	      char buf[200];
               sprintf(buf, "dl_main 54\n");
-              write(99999, buf, strlen(buf) +1);*/
+              write(99999, buf, strlen(buf) +1);
 
 	      /* We have to do symbol dependency testing.  */
 	      struct relocate_args args;
@@ -2259,9 +2259,9 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
 		  struct link_map *l = main_map->l_initfini[i];
 		  if (l != &GL(dl_rtld_map) && ! l->l_faked)
 		    {
-        	      /*char buf[200];
+        	      char buf[200];
 	              sprintf(buf, "dl_main 55\n");
-          	      write(99999, buf, strlen(buf) +1);*/
+          	      write(99999, buf, strlen(buf) +1);
 
 		      args.l = l;
 		      _dl_receive_error (print_unresolved, relocate_doit,
@@ -2272,9 +2272,9 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
 	      if ((GLRO_dl_debug_mask & DL_DEBUG_PRELINK)
 		  && rtld_multiple_ref)
 		{
-	          /*char buf[200];
+	          char buf[200];
           	  sprintf(buf, "dl_main 56\n");
-          	  write(99999, buf, strlen(buf) +1);*/
+          	  write(99999, buf, strlen(buf) +1);
 
 		  /* Mark the link map as not yet relocated again.  */
 		  GL(dl_rtld_map).l_relocated = 0;
@@ -2285,9 +2285,9 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
 #define VERNEEDTAG (DT_NUM + DT_THISPROCNUM + DT_VERSIONTAGIDX (DT_VERNEED))
 	  if (version_info)
 	    {
-              /*char buf[200];
+              char buf[200];
               sprintf(buf, "dl_main 57\n");
-              write(99999, buf, strlen(buf) +1);*/
+              write(99999, buf, strlen(buf) +1);
 
 	      /* Print more information.  This means here, print information
 		 about the versions needed.  */
@@ -2308,9 +2308,9 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
 
 		  if (first)
 		    {
-	              /*char buf[200];
+	              char buf[200];
         	      sprintf(buf, "dl_main 58\n");
-         	      write(99999, buf, strlen(buf) +1);*/
+         	      write(99999, buf, strlen(buf) +1);
 
 		      _dl_printf ("\n\tVersion information:\n");
 		      first = 0;
@@ -2370,9 +2370,9 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
       && ! __builtin_expect (GLRO(dl_profile) != NULL, 0)
       && ! __builtin_expect (GLRO(dl_dynamic_weak), 0))
     {
-      /*char buf[200];
+      char buf[200];
       sprintf(buf, "dl_main 59\n");
-      write(99999, buf, strlen(buf) +1);*/
+      write(99999, buf, strlen(buf) +1);
 
       ElfW(Lib) *liblist, *liblistend;
       struct link_map **r_list, **r_listend, *l;
@@ -2439,9 +2439,9 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
   /* Print scope information.  */
   if (__builtin_expect (GLRO(dl_debug_mask) & DL_DEBUG_SCOPES, 0))
     {
-      /*char buf[200];
+      char buf[200];
       sprintf(buf, "dl_main 60\n");
-      write(99999, buf, strlen(buf) +1);*/
+      write(99999, buf, strlen(buf) +1);
 
       _dl_debug_printf ("\nInitial object scopes\n");
 
@@ -2451,15 +2451,15 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
 
   if (prelinked)
     {
-      /*char buf[200];
+      char buf[200];
       sprintf(buf, "dl_main 61\n");
-      write(99999, buf, strlen(buf) +1);*/
+      write(99999, buf, strlen(buf) +1);
 
       if (main_map->l_info [ADDRIDX (DT_GNU_CONFLICT)] != NULL)
 	{
-          /*char buf[200];
+          char buf[200];
           sprintf(buf, "dl_main 62\n");
-          write(99999, buf, strlen(buf) +1);*/
+          write(99999, buf, strlen(buf) +1);
 
 	  ElfW(Rela) *conflict, *conflictend;
 #ifndef HP_TIMING_NONAVAIL
@@ -2494,9 +2494,9 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
     }
   else
     {
-      /*char buf[200];
+      char buf[200];
       sprintf(buf, "dl_main 63\n");
-      write(99999, buf, strlen(buf) +1);*/
+      write(99999, buf, strlen(buf) +1);
 
       /* Now we have all the objects loaded.  Relocate them all except for
 	 the dynamic linker itself.  We do this in reverse order so that copy
@@ -2570,9 +2570,9 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
      TLS we know the thread pointer was initialized earlier.  */
   if (! tls_init_tp_called)
     {
-      /*char buf[200];
+      char buf[200];
       sprintf(buf, "dl_main 64\n");
-      write(99999, buf, strlen(buf) +1);*/
+      write(99999, buf, strlen(buf) +1);
 
       const char *lossage
 #ifdef USE___THREAD
@@ -2590,9 +2590,9 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
 
   if (! prelinked && rtld_multiple_ref)
     {
-      /*char buf[200];
+      char buf[200];
       sprintf(buf, "dl_main 65\n");
-      write(99999, buf, strlen(buf) +1);*/
+      write(99999, buf, strlen(buf) +1);
 
       /* There was an explicit ref to the dynamic linker as a shared lib.
 	 Re-relocate ourselves with user-controlled symbol definitions.
@@ -2627,17 +2627,17 @@ ERROR: ld.so: object '%s' cannot be loaded as audit interface: %s; ignored.\n",
   /* Auditing checkpoint: we have added all objects.  */
   if (__builtin_expect (GLRO(dl_naudit) > 0, 0))
     {
-      /*char buf[200];
+      char buf[200];
       sprintf(buf, "dl_main 66\n");
-      write(99999, buf, strlen(buf) +1);*/
+      write(99999, buf, strlen(buf) +1);
 
       struct link_map *head = GL(dl_ns)[LM_ID_BASE]._ns_loaded;
       /* Do not call the functions for any auditing object.  */
       if (head->l_auditing == 0)
 	{
-          /*char buf[200];
+          char buf[200];
           sprintf(buf, "dl_main 67\n");
-          write(99999, buf, strlen(buf) +1);*/
+          write(99999, buf, strlen(buf) +1);
 
 	  struct audit_ifaces *afct = GLRO(dl_audit);
 	  for (unsigned int cnt = 0; cnt < GLRO(dl_naudit); ++cnt)

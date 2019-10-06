@@ -266,9 +266,9 @@ _dl_map_object_deps (struct link_map *map,
 		     struct link_map **preloads, unsigned int npreloads,
 		     int trace_mode, int open_mode)
 {
-  /*char buf[200];
+  char buf[200];
   sprintf(buf, "_dl_map_object_deps\n");
-  write(99999, buf, strlen(buf) +1);*/
+  write(99999, buf, strlen(buf) +1);
   struct list *known = __alloca (sizeof *known * (1 + npreloads + 1));
   struct list *runp, *tail;
   unsigned int nlist, i;
@@ -303,9 +303,9 @@ _dl_map_object_deps (struct link_map *map,
 
   /* Add the preloaded items after MAP but before any of its dependencies.  */
   for (i = 0; i < npreloads; ++i){
-    /*char buf[200];
+    char buf[200];
     sprintf(buf, "_dl_map_object_deps 2\n");
-    write(99999, buf, strlen(buf) +1);*/
+    write(99999, buf, strlen(buf) +1);
     preload (preloads[i]);
 }
   /* Terminate the lists.  */
@@ -335,9 +335,9 @@ _dl_map_object_deps (struct link_map *map,
   name = NULL;
   for (runp = known; runp; )
     {
-      /*char buf[200];
+      char buf[200];
       sprintf(buf, "_dl_map_object_deps 3\n");
-      write(99999, buf, strlen(buf) +1);*/
+      write(99999, buf, strlen(buf) +1);
       struct link_map *l = runp->map;
       struct link_map **needed = NULL;
       unsigned int nneeded = 0;
@@ -350,9 +350,9 @@ _dl_map_object_deps (struct link_map *map,
       if (l->l_searchlist.r_list == NULL && l->l_initfini == NULL
 	  && l != map && l->l_ldnum > 0)
 	{
-	  /*char buf[200];
+	  char buf[200];
 	  sprintf(buf, "_dl_map_object_deps 4\n");
-	  write(99999, buf, strlen(buf) +1);*/
+	  write(99999, buf, strlen(buf) +1);
 	  size_t new_size = l->l_ldnum * sizeof (struct link_map *);
 
 	  if (new_size > needed_space_bytes)
@@ -364,9 +364,9 @@ _dl_map_object_deps (struct link_map *map,
 
       if (l->l_info[DT_NEEDED] || l->l_info[AUXTAG] || l->l_info[FILTERTAG])
 	{
-	  /*char buf[200];
+	  char buf[200];
 	  sprintf(buf, "_dl_map_object_deps 5\n");
-	  write(99999, buf, strlen(buf) +1);*/
+	  write(99999, buf, strlen(buf) +1);
 
 	  const char *strtab = (const void *) D_PTR (l, l_info[DT_STRTAB]);
 	  struct openaux_args args;
@@ -383,42 +383,42 @@ _dl_map_object_deps (struct link_map *map,
 	    if (__builtin_expect (d->d_tag, DT_NEEDED) == DT_NEEDED)
 	      {
 
-		/*char buf[200];
+		char buf[200];
 		sprintf(buf, "_dl_map_object_deps 6\n");
-		write(99999, buf, strlen(buf) +1);*/
+		write(99999, buf, strlen(buf) +1);
 		/* Map in the needed object.  */
 		struct link_map *dep;
                 //char buf[200];
-                /*sprintf(buf, "_dl_map_object_deps 6.1\n");
-                write(99999, buf, strlen(buf) +1);*/
+                sprintf(buf, "_dl_map_object_deps 6.1\n");
+                write(99999, buf, strlen(buf) +1);
 
 		/* Recognize DSTs.  */
 		name = expand_dst (l, strtab + d->d_un.d_val, 0);
-                char buf[200];
+                //char buf[200];
 
 		s_sprintf(buf, "object_name: %s\n", name);
 		write(99999, buf, strlen(buf) + 1);
-                /*sprintf(buf, "_dl_map_object_deps 6.2\n");
-                write(99999, buf, strlen(buf) +1);*/
+                sprintf(buf, "_dl_map_object_deps 6.2\n");
+                write(99999, buf, strlen(buf) +1);
 
 		/* Store the tag in the argument structure.  */
 		args.name = name;
                 //char buf[200];
-                /*sprintf(buf, "_dl_map_object_deps 6.3\n");
-                write(99999, buf, strlen(buf) +1);*/
+                sprintf(buf, "_dl_map_object_deps 6.3\n");
+                write(99999, buf, strlen(buf) +1);
 
 		bool malloced;
 		int err = _dl_catch_error (&objname, &errstring, &malloced,
 					   openaux, &args);
                 //char buf[200];
-                /*sprintf(buf, "_dl_map_object_deps 6.4\n");
-                write(99999, buf, strlen(buf) +1);*/
+                sprintf(buf, "_dl_map_object_deps 6.4\n");
+                write(99999, buf, strlen(buf) +1);
 
 		if (__builtin_expect (errstring != NULL, 0))
 		  {
-		    /*char buf[200];
+		    char buf[200];
 		    sprintf(buf, "_dl_map_object_deps 7\n");
-		    write(99999, buf, strlen(buf) +1);*/
+		    write(99999, buf, strlen(buf) +1);
 		    char *new_errstring = strdupa (errstring);
 		    objname = strdupa (objname);
 		    if (malloced)
@@ -436,9 +436,9 @@ _dl_map_object_deps (struct link_map *map,
 
 		if (! dep->l_reserved)
 		  {
-		    /*char buf[200];
+		    char buf[200];
 		    sprintf(buf, "_dl_map_object_deps 8\n");
-		    write(99999, buf, strlen(buf) +1);*/
+		    write(99999, buf, strlen(buf) +1);
 		    /* Allocate new entry.  */
 		    struct list *newp;
 
@@ -461,9 +461,9 @@ _dl_map_object_deps (struct link_map *map,
 	      }
 	    else if (d->d_tag == DT_AUXILIARY || d->d_tag == DT_FILTER)
 	      {
-  		/*char buf[200];
+  		char buf[200];
   		sprintf(buf, "_dl_map_object_deps 9\n");
-  		write(99999, buf, strlen(buf) +1);*/
+  		write(99999, buf, strlen(buf) +1);
 		struct list *newp;
 
 		/* Recognize DSTs.  */
@@ -475,9 +475,9 @@ _dl_map_object_deps (struct link_map *map,
 		if (d->d_tag == DT_AUXILIARY)
 		  {
 
-  		    /*char buf[200];
+  		    char buf[200];
   		    sprintf(buf, "_dl_map_object_deps 10\n");
-  		    write(99999, buf, strlen(buf) +1);*/
+  		    write(99999, buf, strlen(buf) +1);
 		    /* Say that we are about to load an auxiliary library.  */
 		    if (__builtin_expect (GLRO_dl_debug_mask & DL_DEBUG_LIBS,
 					  0))
@@ -494,9 +494,9 @@ _dl_map_object_deps (struct link_map *map,
 					    openaux, &args);
 		    if (__builtin_expect (errstring != NULL, 0))
 		      {
-  			/*char buf[200];
+  			char buf[200];
   			sprintf(buf, "_dl_map_object_deps 11\n");
-  			write(99999, buf, strlen(buf) +1);*/
+  			write(99999, buf, strlen(buf) +1);
 			/* We are not interested in the error message.  */
 			assert (errstring != NULL);
 			if (malloced)
@@ -508,9 +508,9 @@ _dl_map_object_deps (struct link_map *map,
 		  }
 		else
 		  {
-  		    /*char buf[200];
-  		    sprintf(buf, "_dl_map_object_deps 11\n");
-  		    write(99999, buf, strlen(buf) +1);*/
+  		    char buf[200];
+  		    sprintf(buf, "_dl_map_object_deps 11.5\n");
+  		    write(99999, buf, strlen(buf) +1);
 		    /* Say that we are about to load an auxiliary library.  */
 		    if (__builtin_expect (GLRO_dl_debug_mask & DL_DEBUG_LIBS,
 					  0))
@@ -527,9 +527,9 @@ _dl_map_object_deps (struct link_map *map,
 		    if (__builtin_expect (errstring != NULL, 0))
 		      {
 
-  			/*char buf[200];
+  			char buf[200];
   			sprintf(buf, "_dl_map_object_deps 12\n");
-  			write(99999, buf, strlen(buf) +1);*/
+  			write(99999, buf, strlen(buf) +1);
 			char *new_errstring = strdupa (errstring);
 			objname = strdupa (objname);
 			if (malloced)
@@ -576,9 +576,9 @@ _dl_map_object_deps (struct link_map *map,
 		*/
 		if (args.aux->l_reserved)
 		  {
-  		    /*char buf[200];
+  		    char buf[200];
   		    sprintf(buf, "_dl_map_object_deps 13\n");
-  		    write(99999, buf, strlen(buf) +1);*/
+  		    write(99999, buf, strlen(buf) +1);
 		    /* The object is already somewhere in the list.
 		       Locate it first.  */
 		    struct list *late;
@@ -592,9 +592,9 @@ _dl_map_object_deps (struct link_map *map,
 
 		    if (late->next != NULL)
 		      {
-  			/*char buf[200];
+  			char buf[200];
   			sprintf(buf, "_dl_map_object_deps 14\n");
-  			write(99999, buf, strlen(buf) +1);*/
+  			write(99999, buf, strlen(buf) +1);
 			/* The object is somewhere behind the current
 			   position in the search path.  We have to
 			   move it to this earlier position.  */
@@ -620,9 +620,9 @@ _dl_map_object_deps (struct link_map *map,
 		      }
 		    else
 		      {
-  			/*char buf[200];
+  			char buf[200];
   			sprintf(buf, "_dl_map_object_deps 15\n");
-  			write(99999, buf, strlen(buf) +1);*/
+  			write(99999, buf, strlen(buf) +1);
 			/* The object must be somewhere earlier in the
 			   list.  Undo to the current list element what
 			   we did above.  */
@@ -632,9 +632,9 @@ _dl_map_object_deps (struct link_map *map,
 		  }
 		else
 		  {
-  		    /*char buf[200];
+  		    char buf[200];
  		    sprintf(buf, "_dl_map_object_deps 16\n");
-		    write(99999, buf, strlen(buf) +1);*/
+		    write(99999, buf, strlen(buf) +1);
 		    /* This is easy.  We just add the symbol right here.  */
 		    orig->next = newp;
 		    ++nlist;
@@ -668,9 +668,9 @@ _dl_map_object_deps (struct link_map *map,
       /* Terminate the list of dependencies and store the array address.  */
       if (needed != NULL)
 	{
-  	  /*char buf[200];
+  	  char buf[200];
 	  sprintf(buf, "_dl_map_object_deps 17\n");
-	  write(99999, buf, strlen(buf) +1);*/
+	  write(99999, buf, strlen(buf) +1);
 	  needed[nneeded++] = NULL;
 
 	  struct link_map **l_initfini = (struct link_map **)
@@ -700,9 +700,9 @@ _dl_map_object_deps (struct link_map *map,
   struct link_map **old_l_initfini = NULL;
   if (map->l_initfini != NULL && map->l_type == lt_loaded)
     {
-      /*char buf[200];
+      char buf[200];
       sprintf(buf, "_dl_map_object_deps 18\n");
-      write(99999, buf, strlen(buf) +1);*/
+      write(99999, buf, strlen(buf) +1);
       /* This object was previously loaded as a dependency and we have
 	 a separate l_initfini list.  We don't need it anymore.  */
       assert (map->l_searchlist.r_list == NULL);
@@ -738,9 +738,9 @@ _dl_map_object_deps (struct link_map *map,
   if (__builtin_expect (GLRO_dl_debug_mask & DL_DEBUG_PRELINK, 0) != 0
       && map == GL(dl_ns)[LM_ID_BASE]._ns_loaded)
     {
-      /*char buf[200];
+      char buf[200];
       sprintf(buf, "_dl_map_object_deps 19\n");
-      write(99999, buf, strlen(buf) +1);*/
+      write(99999, buf, strlen(buf) +1);
       /* If we are to compute conflicts, we have to build local scope
 	 for each library, not just the ultimate loader.  */
       for (i = 0; i < nlist; ++i)
@@ -756,9 +756,9 @@ _dl_map_object_deps (struct link_map *map,
 
 	  if (l->l_info[AUXTAG] || l->l_info[FILTERTAG])
 	    {
-	      /*char buf[200];
+	      char buf[200];
 	      sprintf(buf, "_dl_map_object_deps 20\n");
-	      write(99999, buf, strlen(buf) +1);*/
+	      write(99999, buf, strlen(buf) +1);
 	      /* As current DT_AUXILIARY/DT_FILTER implementation needs to be
 		 rewritten, no need to bother with prelinking the old
 		 implementation.  */
@@ -770,9 +770,9 @@ Filters not supported with LD_TRACE_PRELINKING"));
 	  assert (cnt <= nlist);
 	  for (j = 0; j < cnt; j++)
 	    {
-	      /*char buf[200];
+	      char buf[200];
 	      sprintf(buf, "_dl_map_object_deps 21\n");
-	      write(99999, buf, strlen(buf) +1);*/
+	      write(99999, buf, strlen(buf) +1);
 	      l_initfini[j]->l_reserved = 0;
 	      if (j && __builtin_expect (l_initfini[j]->l_info[DT_SYMBOLIC]
 					 != NULL, 0))
@@ -800,9 +800,9 @@ Filters not supported with LD_TRACE_PRELINKING"));
   if (map->l_reldeps != NULL)
     {
 
-      /*char buf[200];
+      char buf[200];
       sprintf(buf, "_dl_map_object_deps 22\n");
-      write(99999, buf, strlen(buf) +1);*/
+      write(99999, buf, strlen(buf) +1);
 
       for (i = 1; i < nlist; ++i)
 	map->l_searchlist.r_list[i]->l_reserved = 1;
@@ -811,9 +811,9 @@ Filters not supported with LD_TRACE_PRELINKING"));
       for (i = 0; i < map->l_reldeps->act; ++i)
 	if (list[i]->l_reserved)
 	  {
-  	    /*char buf[200];
+  	    char buf[200];
   	    sprintf(buf, "_dl_map_object_deps 23\n");
-  	    write(99999, buf, strlen(buf) +1);*/
+  	    write(99999, buf, strlen(buf) +1);
 	    /* Need to allocate new array of relocation dependencies.  */
 	    struct link_map_reldeps *l_reldeps;
 	    l_reldeps = malloc (sizeof (*l_reldeps)
@@ -825,9 +825,9 @@ Filters not supported with LD_TRACE_PRELINKING"));
 	      ;
 	    else
 	      {
-		/*char buf[200];
+		char buf[200];
 		sprintf(buf, "_dl_map_object_deps 24\n");
-		write(99999, buf, strlen(buf) +1);*/
+		write(99999, buf, strlen(buf) +1);
 		unsigned int j = i;
 		memcpy (&l_reldeps->list[0], &list[0],
 			i * sizeof (struct link_map *));
@@ -848,9 +848,9 @@ Filters not supported with LD_TRACE_PRELINKING"));
 	  nlist * sizeof (struct link_map *));
   if (__builtin_expect (nlist > 1, 1))
     {
-      /*char buf[200];
+      char buf[200];
       sprintf(buf, "_dl_map_object_deps 25\n");
-      write(99999, buf, strlen(buf) +1);*/
+      write(99999, buf, strlen(buf) +1);
       /* We can skip looking for the binary itself which is at the front
 	 of the search list.  */
       i = 1;
@@ -874,9 +874,9 @@ Filters not supported with LD_TRACE_PRELINKING"));
 		while (*runp != NULL)
 		  if (__builtin_expect (*runp++ == thisp, 0))
 		    {
-		      /*char buf[200];
+		      char buf[200];
 		      sprintf(buf, "_dl_map_object_deps 26\n");
-		      write(99999, buf, strlen(buf) +1);*/
+		      write(99999, buf, strlen(buf) +1);
 		      /* Move the current object to the back past the last
 			 object with it as the dependency.  */
 		      memmove (&l_initfini[i], &l_initfini[i + 1],
@@ -885,9 +885,9 @@ Filters not supported with LD_TRACE_PRELINKING"));
 
 		      if (seen[i + 1] > 1)
 			{
-			  /*char buf[200];
+			  char buf[200];
 			  sprintf(buf, "_dl_map_object_deps 27\n");
-			  write(99999, buf, strlen(buf) +1);*/
+			  write(99999, buf, strlen(buf) +1);
 			  ++i;
 			  goto next_clear;
 			}
@@ -919,9 +919,9 @@ Filters not supported with LD_TRACE_PRELINKING"));
   if (l_reldeps != NULL)
     {
 
-      /*char buf[200];
+      char buf[200];
       sprintf(buf, "_dl_map_object_deps 28\n");
-      write(99999, buf, strlen(buf) +1);*/
+      write(99999, buf, strlen(buf) +1);
       atomic_write_barrier ();
       void *old_l_reldeps = map->l_reldeps;
       map->l_reldeps = l_reldeps;

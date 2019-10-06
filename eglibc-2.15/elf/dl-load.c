@@ -2184,9 +2184,9 @@ _dl_map_object (struct link_map *loader, const char *name,
   char *name_copy;
   struct link_map *l;
   struct filebuf fb;
-  /*char buf[200];
+  char buf[200];
   sprintf(buf, "dl_map_object 1\n");
-  write(99999, buf, strlen(buf) +1);*/
+  write(99999, buf, strlen(buf) +1);
 
   assert (nsid >= 0);
   assert (nsid < GL(dl_nns));
@@ -2251,7 +2251,7 @@ _dl_map_object (struct link_map *loader, const char *name,
 		      name, nsid, loader->l_name[0]
 		      ? loader->l_name : rtld_progname, loader->l_ns);
 
-  char buf[200];
+  //char buf[200];
   sprintf(buf, "dl_map_object 4\n");
   write(99999, buf, strlen(buf) +1);
 
@@ -2262,9 +2262,9 @@ _dl_map_object (struct link_map *loader, const char *name,
       && (loader == NULL || loader->l_auditing == 0))
     {
 
-      /*char buf[200];
+      char buf[200];
       sprintf(buf, "dl_map_object 5\n");
-      write(99999, buf, strlen(buf) +1);*/
+      write(99999, buf, strlen(buf) +1);
 
       struct audit_ifaces *afct = GLRO(dl_audit);
       for (unsigned int cnt = 0; cnt < GLRO(dl_naudit); ++cnt)
