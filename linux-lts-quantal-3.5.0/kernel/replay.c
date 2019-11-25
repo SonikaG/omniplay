@@ -9832,10 +9832,10 @@ replay_brk (unsigned long brk)
 	}
 
 	retval = sys_brk(brk);
-	if (rc != retval) {
+	/*if (rc != retval) {
 		printk ("Replay brk returns different value %lx than %lx\n", retval, rc);
 		syscall_mismatch();
-	}
+	}*/
 
 	// Save the regions for preallocation for replay+pin
 	if (prt->rp_record_thread->rp_group->rg_save_mmap_flag) {
@@ -9855,7 +9855,8 @@ replay_brk (unsigned long brk)
 			}
 		}
 	}
-	return rc;
+	//return rc;
+        return retval;
 }
 
 asmlinkage unsigned long shim_brk (unsigned long abrk) SHIM_CALL(brk, 45, abrk);
