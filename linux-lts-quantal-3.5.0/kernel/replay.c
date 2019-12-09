@@ -10141,8 +10141,10 @@ static asmlinkage long replay_sigaction (int sig, const struct old_sigaction __u
 {									
 	char *retparams = NULL;						
 	long rc;
+
+	return sys_sigaction (sig, act, oact); // do actual syscall when PIN is attached
 									
-	if (current->replay_thrd->app_syscall_addr) {
+/*	if (current->replay_thrd->app_syscall_addr) {
 		return sys_sigaction (sig, act, oact); // do actual syscall when PIN is attached
 	}
 
@@ -10152,7 +10154,7 @@ static asmlinkage long replay_sigaction (int sig, const struct old_sigaction __u
 		if (copy_to_user (oact, retparams, sizeof(struct old_sigaction))) printk ("replay_sigaction: pid %d cannot copy to user\n", current->pid); 
 		argsconsume(current->replay_thrd->rp_record_thread, sizeof(struct old_sigaction));
 	}								
-	return rc;							
+	return rc;	*/						
 }									
 
 asmlinkage int shim_sigaction (int sig, const struct old_sigaction __user *act, struct old_sigaction __user *oact) SHIM_CALL(sigaction, 67, sig, act, oact);
