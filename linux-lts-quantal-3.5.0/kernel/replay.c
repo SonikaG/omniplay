@@ -927,6 +927,21 @@ struct exec_values {
 	int secureexec;
 };
 
+struct fd_to_data{
+  int fd;
+  struct epoll_event __user events[10];
+}; 
+
+struct epfd_to_fds{
+  int epfd;
+  struct fd_to_data;
+};
+
+struct file_map{
+  struct epfd_to_fds mapping[10];
+  int pos;
+};
+ 
 //This has record thread specific data
 struct record_thread {
 	struct record_group* rp_group; // Points to record group
@@ -984,6 +999,7 @@ struct record_thread {
 #endif
 
 	struct record_cache_files* rp_cache_files; // Info about open cache files
+	struct file_map* epoll_file_data;
 };
 
 /* FIXME: Put this somewhere that doesn't suck */
@@ -5133,13 +5149,13 @@ replay_signal_delivery (int* signr, siginfo_t* info)
 	*signr = psignal->signr;
 	memcpy (info, &psignal->info, sizeof (siginfo_t));
 
-	if (!is_pin_attached()) {
+	/*if (!is_pin_attached()) {
 		MPRINT ("Pid %d No Pin attached, so setting blocked signal mask to recorded mask, and copying k_sigaction\n", current->pid);
 		memcpy (&current->sighand->action[psignal->signr-1],
 			&psignal->ka, sizeof (struct k_sigaction));
 		current->blocked = psignal->blocked;
 		current->real_blocked = psignal->real_blocked;
-	}
+	}*/
 }
 
 int replay_has_pending_signal (void) {
@@ -14504,6 +14520,21 @@ shim_exit_group (int error_code)
 RET1_COUNT_SHIM3(lookup_dcookie, 253, buf, u64, cookie64, char __user *, buf, size_t, len);
 SIMPLE_SHIM1(epoll_create, 254, int, size);
 SIMPLE_SHIM4(epoll_ctl, 255, int, epfd, int, op, int, fd, struct epoll_event __user *, event);
+/*static asmlinkage long 
+record_epoll_ctl(int epfd, int op, int fd, struct epoll_event __user *event)
+{
+		long rc;						
+		new_syscall_enter (255);				
+		rc = sys_epoll_ctl(epfd, op, fd, event); 
+		new_syscall_done (255, rc);				
+		new_syscall_exit (255, NULL);			
+		return rc;
+}
+
+static asmlinkage long
+replay_epoll_ctl(int epfd, int op, int fd, struct epoll_event __user *event){
+
+}*/
 
 static asmlinkage long 
 record_epoll_wait(int epfd, struct epoll_event __user *events, int maxevents, int timeout)

@@ -161,11 +161,11 @@ class OmniplayEnvironment(object):
         for pthread in self.pthread.split(':'):
             assert os.path.exists(pthread)
             assert os.path.isdir(pthread)
-        assert os.path.exists(self.pin_root)
-        assert os.path.isdir(self.tools_location)
+        #assert os.path.exists(self.pin_root)
+        #assert os.path.isdir(self.tools_location)
 
-        for binary in self.bins:
-            assert os.path.exists(binary)
+        #for binary in self.bins:
+         #   assert os.path.exists(binary)
 
         for script in self.scripts:
             assert os.path.exists(script)
@@ -271,7 +271,7 @@ class OmniplayEnvironment(object):
 
         if self.verbose:
             print(cmd)
-
+	print(cmd)
         process = subprocess.Popen(shlex.split(cmd), shell=False, stdout=pipe_log, stderr=pipe_log)
         return process
 
@@ -476,8 +476,9 @@ class OmniplayEnvironment(object):
                 match = re.match("Env\. var\. [0-9]+ is (.+)", line)
                 if match is not None:
                     match = re.match("([-_a-zA-Z0-9]+)=(.*)", match.group(1))
-                    env[match.group(1)] = match.group(2)
-                    continue
+                    if match is not None:
+                      env[match.group(1)] = match.group(2)
+                      continue
 
         return LogCkpt(
                 pid = pid,
