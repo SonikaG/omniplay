@@ -927,21 +927,6 @@ struct exec_values {
 	int secureexec;
 };
 
-struct fd_to_data{
-  int fd;
-  struct epoll_event __user events[10];
-}; 
-
-struct epfd_to_fds{
-  int epfd;
-  struct fd_to_data;
-};
-
-struct file_map{
-  struct epfd_to_fds mapping[10];
-  int pos;
-};
- 
 //This has record thread specific data
 struct record_thread {
 	struct record_group* rp_group; // Points to record group
@@ -999,7 +984,6 @@ struct record_thread {
 #endif
 
 	struct record_cache_files* rp_cache_files; // Info about open cache files
-	struct file_map* epoll_file_data;
 };
 
 /* FIXME: Put this somewhere that doesn't suck */
