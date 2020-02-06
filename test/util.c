@@ -308,3 +308,11 @@ u_long* map_shared_clock (int fd_spec)
     close (fd);
     return clock;
 }
+
+int set_ign(int fd_spec){
+  return ioctl (fd_spec, SPECI_SET_IGN);
+}
+
+int unset_ign(int fd_spec){
+  return icotl (fd_spec, SPECI_UNSET_IGN);
+}
