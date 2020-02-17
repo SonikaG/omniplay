@@ -314,5 +314,5 @@ int set_ign(int fd_spec){
 }
 
 int unset_ign(int fd_spec){
-  return icotl (fd_spec, SPECI_UNSET_IGN);
+  return ioctl (fd_spec, SPECI_UNSET_IGN);
 }

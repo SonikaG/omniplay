@@ -135,5 +135,5 @@ struct redo_mmap_data {
 #define SPECI_IS_PIN_ATTACHING _IO('u', 26)
 #define SPECI_REDO_MUNMAP _IO('u', 27)
 #define SPECI_SET_IGN _IO('u', 28)
-#define SPECI_UNSET_IGN _IO('u' 29)
+#define SPECI_UNSET_IGN _IO('u', 29)
 #endif
