@@ -179,6 +179,10 @@ long try_to_exit (u_long pid);
 /* Let's the PIN tool read the clock value too */
 long pthread_shm_path (void);
 
+/*Let's a user ignore syscalls on replay*/
+int set_ign(void);
+int unset_ign(void);
+
 /* For obtaining list of open sockets */
 struct monitor_data {
 	int fd;
