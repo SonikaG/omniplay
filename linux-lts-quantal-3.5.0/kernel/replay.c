@@ -974,7 +974,6 @@ struct record_thread {
 	u_long rp_record_hook;          // Used for dumbass linking in glibc
 	struct repsignal *rp_signals;   // Stores delayed signals
 	struct repsignal* rp_last_signal; // Points to last signal recorded for this process
-
 #define RECORD_FILE_SLOTS 1024
 	loff_t prev_file_version[RECORD_FILE_SLOTS];
 
@@ -1076,6 +1075,7 @@ struct replay_thread {
 
         struct replay_cache_files* rp_cache_files; // Info about open cache files
         struct replay_cache_files* rp_mmap_files; // Info about open cache files
+	int rep_ign_flag; //to ignore syscall on replay
 };
 
 /* Prototypes */
@@ -2178,7 +2178,7 @@ new_record_thread (struct record_group* prg, u_long recpid, struct record_cache_
 	prp->rp_record_hook = 0;
 	prp->rp_signals = NULL;
 	prp->rp_last_signal = NULL;
-
+	prp->rep_ign_flag = 0;
 	atomic_inc(&prg->rg_record_threads);
 	if (pfiles) {
 		prp->rp_cache_files = pfiles;
@@ -7215,6 +7215,36 @@ long pthread_shm_path (void)
 	return fd;
 }
 EXPORT_SYMBOL(pthread_shm_path);
+
+int set_ign(){
+  if(current->record_thrd){
+    return -1;
+  }
+  else if(current->replay_thrd){
+    current->replay_thrd->rep_ign_flag = 1;
+    return 0;
+  }
+  else {
+    printk("[ERROR]:Pid %d, neither record/replay is trying to set replay ignore_flag", current->pid);
+    return -EINVAL;
+  }    
+}
+EXPORT_SYMBOL(set_ign);
+
+int unset_ign(){
+  if(current->record_thrd){
+    return -1;
+  }
+  else if(current->replay_thrd){
+    current->replay_thrd->rep_ign_flag = 0;
+    return 0;
+  }
+  else {
+    printk("[ERROR]:Pid %d, neither record/replay is trying to set replay ignore_flag", current->pid);
+    return -EINVAL;
+  }
+}
+EXPORT_SYMBOL(unset_ign);
 
 asmlinkage long sys_pthread_shm_path (void)
 {
