@@ -81,8 +81,7 @@ u_long* map_shared_clock (int fd_spec);
 long check_for_redo (int fd_spec);
 long redo_mmap (int fd_spec, u_long* prc, u_long* plen);
 long redo_munmap (int fd_spec);
-int set_ign(int fd_spec);
-int unset_ign(int fd_spec);
+int set_ign(int fd_spec, int * adr);
 #ifdef __cplusplus
 }
 #endif

@@ -180,8 +180,7 @@ long try_to_exit (u_long pid);
 long pthread_shm_path (void);
 
 /*Let's a user ignore syscalls on replay*/
-int set_ign(void);
-int unset_ign(void);
+int set_ign(int *);
 
 /* For obtaining list of open sockets */
 struct monitor_data {

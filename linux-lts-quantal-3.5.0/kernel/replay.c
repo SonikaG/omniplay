@@ -983,6 +983,7 @@ struct record_thread {
 #endif
 
 	struct record_cache_files* rp_cache_files; // Info about open cache files
+	int __user * rep_ign_flag; //to ignore syscall on replay
 };
 
 /* FIXME: Put this somewhere that doesn't suck */
@@ -1075,7 +1076,6 @@ struct replay_thread {
 
         struct replay_cache_files* rp_cache_files; // Info about open cache files
         struct replay_cache_files* rp_mmap_files; // Info about open cache files
-	int rep_ign_flag; //to ignore syscall on replay
 };
 
 /* Prototypes */
@@ -7216,22 +7216,23 @@ long pthread_shm_path (void)
 }
 EXPORT_SYMBOL(pthread_shm_path);
 
-int set_ign(){
+int set_ign(int * adr){
   if(current->record_thrd){
-    return -1;
+    current->record_thrd->rep_ign_flag = adr;
+    return 0;
   }
   else if(current->replay_thrd){
-    current->replay_thrd->rep_ign_flag = 1;
+    current->replay_thrd->rp_record_thread->rep_ign_flag = adr;
     return 0;
   }
   else {
     printk("[ERROR]:Pid %d, neither record/replay is trying to set replay ignore_flag", current->pid);
     return -EINVAL;
-  }    
+  }
 }
 EXPORT_SYMBOL(set_ign);
 
-int unset_ign(){
+/*int unset_ign(){
   if(current->record_thrd){
     return -1;
   }
@@ -7244,7 +7245,7 @@ int unset_ign(){
     return -EINVAL;
   }
 }
-EXPORT_SYMBOL(unset_ign);
+EXPORT_SYMBOL(unset_ign);*/
 
 asmlinkage long sys_pthread_shm_path (void)
 {
@@ -7261,12 +7262,17 @@ asmlinkage long sys_pthread_sysign (void)
 #define SHIM_CALL_MAIN(number, F_RECORD, F_REPLAY, F_SYS) \
 { \
 	int ignore_flag;						\
+	int ignore_flag_2;						\
 	long rc;							\
 	if (current->record_thrd) {					\
 		if (current->record_thrd->rp_ignore_flag_addr) {	\
 			get_user (ignore_flag, current->record_thrd->rp_ignore_flag_addr); \
 			if (ignore_flag) return F_SYS;			\
 		}							\
+                else if (current->record_thrd->rep_ign_flag) {        \
+                        get_user (ignore_flag_2, current->record_thrd->rep_ign_flag); \
+                        if (ignore_flag_2) return F_SYS;                  \
+                }							\
 		return F_RECORD;					\
 	}								\
 									\
@@ -7278,6 +7284,13 @@ asmlinkage long sys_pthread_sysign (void)
 				return F_SYS;				\
 			}						\
 		}							\
+                else if (current->replay_thrd->rp_record_thread->rep_ign_flag) {        \
+                        get_user (ignore_flag_2, current->replay_thrd->rp_record_thread->rep_ign_flag); \
+                       if (ignore_flag_2) { \
+                                MPRINT ("syscall %d ignored\n", number); \
+                                return F_SYS;                           \
+                        } 						\
+                }                                                       \
 		DPRINT("Pid %d, regular replay syscall %d\n", current->pid, number); \
 		if (current->replay_thrd->rp_group->rg_timebuf)		\
 			record_timings (current->replay_thrd, number);	\

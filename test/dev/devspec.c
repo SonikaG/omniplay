@@ -392,10 +392,7 @@ spec_psdev_ioctl (struct file* file, u_int cmd, u_long data)
 		return retval;
 	}
 	case SPECI_SET_IGN: {
-	  	return set_ign();
-	}
-	case SPECI_UNSET_IGN: {
-		return unset_ign();
+	  	return set_ign((int*) data);
 	}
 	default:
 		return -EINVAL;
