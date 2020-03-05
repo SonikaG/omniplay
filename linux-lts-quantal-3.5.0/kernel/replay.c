@@ -84,6 +84,7 @@
 #include "replay_monitor.h"
 #include "replay_perf_event_wrapper.h"
 
+#include "../../test/dev/devspec.h"
 /* For debugging failing fs operations */
 int debug_flag = 0;
 
@@ -7217,11 +7218,13 @@ long pthread_shm_path (void)
 EXPORT_SYMBOL(pthread_shm_path);
 
 int set_ign(int * adr){
+  printk("made it here to set ign!\n");
   if(current->record_thrd){
     current->record_thrd->rep_ign_flag = adr;
     return 0;
   }
   else if(current->replay_thrd){
+    printk("setting flag on replay\n");
     current->replay_thrd->rp_record_thread->rep_ign_flag = adr;
     return 0;
   }
@@ -7285,6 +7288,7 @@ asmlinkage long sys_pthread_sysign (void)
 			}						\
 		}							\
                 else if (current->replay_thrd->rp_record_thread->rep_ign_flag) {        \
+			MPRINT("ignore flag address is set\n");		\
                         get_user (ignore_flag_2, current->replay_thrd->rp_record_thread->rep_ign_flag); \
                        if (ignore_flag_2) { \
                                 MPRINT ("syscall %d ignored\n", number); \
@@ -10122,6 +10126,12 @@ replay_ioctl (unsigned int fd, unsigned int cmd, unsigned long arg)
 		}
 		argsconsume(current->replay_thrd->rp_record_thread, sizeof(u_long) + my_size);
 	}
+        if(cmd == SPECI_SET_IGN){
+ 	   printk("set_ign ioctl expected to be here!\n");
+           long retval = set_ign(arg);
+           return retval;
+        }
+	printk("here now and cmd is %d!\n", cmd);
 	return rc;
 }
 
