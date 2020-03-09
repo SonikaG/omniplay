@@ -751,7 +751,7 @@ struct record_group {
 	//ARQUINN: we need a queue here for waiters. 
 	wait_queue_head_t finished_queue; // the queue of tasks waiting for this replay to finish
 	int finished;        //Is the replay group finished running? for right now I have this locked by the mutex above... not sure it really makes sense.
-
+	int __user * rep_ign_flag; //to ignore syscall on replay
 
 };
 
@@ -984,7 +984,7 @@ struct record_thread {
 #endif
 
 	struct record_cache_files* rp_cache_files; // Info about open cache files
-	int __user * rep_ign_flag; //to ignore syscall on replay
+	//int __user * rep_ign_flag; //to ignore syscall on replay
 };
 
 /* FIXME: Put this somewhere that doesn't suck */
@@ -2008,7 +2008,7 @@ new_record_group (char* logdir)
 	//         (do we need this finish?) 
 	init_waitqueue_head(&(prg->finished_queue));
 	prg->finished = 0;
-
+	prg->rep_ign_flag = 0;
 
 	MPRINT ("Pid %d new_record_group %lld: exited\n", current->pid, prg->rg_id);
 	return prg;
@@ -2179,7 +2179,7 @@ new_record_thread (struct record_group* prg, u_long recpid, struct record_cache_
 	prp->rp_record_hook = 0;
 	prp->rp_signals = NULL;
 	prp->rp_last_signal = NULL;
-	prp->rep_ign_flag = 0;
+	//prp->rep_ign_flag = 0;
 	atomic_inc(&prg->rg_record_threads);
 	if (pfiles) {
 		prp->rp_cache_files = pfiles;
@@ -7220,12 +7220,12 @@ EXPORT_SYMBOL(pthread_shm_path);
 int set_ign(int * adr){
   printk("made it here to set ign!\n");
   if(current->record_thrd){
-    current->record_thrd->rep_ign_flag = adr;
+    current->record_thrd->rp_group->rep_ign_flag = adr;
     return 0;
   }
   else if(current->replay_thrd){
     printk("setting flag on replay\n");
-    current->replay_thrd->rp_record_thread->rep_ign_flag = adr;
+    current->replay_thrd->rp_record_thread->rp_group->rep_ign_flag = adr;
     return 0;
   }
   else {
@@ -7272,8 +7272,8 @@ asmlinkage long sys_pthread_sysign (void)
 			get_user (ignore_flag, current->record_thrd->rp_ignore_flag_addr); \
 			if (ignore_flag) return F_SYS;			\
 		}							\
-                else if (current->record_thrd->rep_ign_flag) {        \
-                        get_user (ignore_flag_2, current->record_thrd->rep_ign_flag); \
+                else if (current->record_thrd->rp_group->rep_ign_flag) {        \
+                        get_user (ignore_flag_2, current->record_thrd->rp_group->rep_ign_flag); \
                         if (ignore_flag_2) return F_SYS;                  \
                 }							\
 		return F_RECORD;					\
@@ -7287,9 +7287,9 @@ asmlinkage long sys_pthread_sysign (void)
 				return F_SYS;				\
 			}						\
 		}							\
-                else if (current->replay_thrd->rp_record_thread->rep_ign_flag) {        \
+                else if (current->replay_thrd->rp_record_thread->rp_group->rep_ign_flag) {        \
 			MPRINT("ignore flag address is set\n");		\
-                        get_user (ignore_flag_2, current->replay_thrd->rp_record_thread->rep_ign_flag); \
+                        get_user (ignore_flag_2, current->replay_thrd->rp_record_thread->rp_group->rep_ign_flag); \
                        if (ignore_flag_2) { \
                                 MPRINT ("syscall %d ignored\n", number); \
                                 return F_SYS;                           \
@@ -10131,7 +10131,7 @@ replay_ioctl (unsigned int fd, unsigned int cmd, unsigned long arg)
            long retval = set_ign(arg);
            return retval;
         }
-	printk("here now and cmd is %d!\n", cmd);
+	printk("here now and fd is %d!\n", fd);
 	return rc;
 }
 
