@@ -433,14 +433,18 @@ int init_module(void)
 
     printk(KERN_INFO "User-level speculation module version 1.0\n");
 
-    err = alloc_chrdev_region(&spec_dev, 0, 1, SPEC_NAME);
+/*    err = alloc_chrdev_region(&spec_dev, 0, 1, SPEC_NAME);
     if (err < 0) {
 	printk("Couldn't alloc devnumber for devspec\n");
 	goto fail;
+    }*/
+
+    spec_dev = MKDEV(SPEC_PSDEV_MAJOR, 0);
+    err = register_chrdev_region(spec_dev, 1, SPEC_NAME);
+    if (err < 0) {
+        printk("Couldn't alloc devnumber for devspec\n");
+        goto fail;
     }
-
-    spec_dev = MKDEV(MAJOR(spec_dev), 0);
-
     dev_class = class_create(THIS_MODULE, SPEC_NAME);
     if (IS_ERR(dev_class)) {
 	err = PTR_ERR(dev_class);

@@ -60,7 +60,7 @@
 #include <linux/msg.h>
 #include "../ipc/util.h" // For shm utility functions
 #include <asm/user_32.h>
-
+#include <linux/fs.h>
 #include <linux/replay_configs.h>
 
 
@@ -9942,7 +9942,26 @@ record_ioctl (unsigned int fd, unsigned int cmd, unsigned long arg)
 	long rc = 0;
 	int dir;
 	int size;
-
+	/*struct stat s_buf;
+	int err = fstat(fd, s_buf);
+	if (err){
+		printk("BIG ERROR CAN'T STAT FILE\n");
+	}
+	printk("major number is %u\n", MAJOR(s_buf.st_rdev);*/
+	struct file* filp;
+	struct files_struct* files;
+	struct fdtable *fdt;
+	files = current->files;
+	spin_lock(&files->file_lock);
+	fdt = files_fdtable(files);
+	filp = fdt->fd[fd];
+	spin_unlock(&files->file_lock);
+	struct inode* ino = filp->f_dentry->d_inode;
+        unsigned int maj = MAJOR(ino->i_rdev);
+	printk("major number is %u\n", maj);
+	if (maj == 149){
+           printk("found spec device");
+	}
 	switch (cmd) {
 	case TCSBRK:
 	case TCSBRKP:
