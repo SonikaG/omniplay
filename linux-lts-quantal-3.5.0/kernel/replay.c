@@ -2848,7 +2848,7 @@ static void* argsalloc (size_t size)
 	// return pointer and then advance
 	ptr = node->pos;
 	node->pos += size;
-
+	printk("first pos is %p\n", node->pos);
 	return ptr;
 }
 
@@ -2862,6 +2862,7 @@ argshead (struct record_thread* prect)
 		printk ("argshead: pid %d sanity check failed - no anc. data\n", current->pid);
 		BUG();
 	}
+ 	printk("pos is %p\n", node->pos);
 	return node->pos;
 }
 
@@ -4869,7 +4870,10 @@ new_syscall_exit (long sysnum, void* retparams)
 	psr = &prt->rp_log[prt->rp_in_ptr];
 	psr->flags = retparams ? (psr->flags | SR_HAS_RETPARAMS) : psr->flags;
 	if (unlikely(prt->rp_signals)) signal_wake_up (current, 0); // we want to deliver signals when this syscall exits
-
+	if(retparams){
+	    printk("retparams is %s\n", (char *)(retparams+sizeof(u_long)));
+	    printk("psr->flags is %u\n", (psr->flags));
+	}
 #ifdef MCPRINT
 	if (replay_min_debug || replay_debug) {
 		MPRINT ("Pid %d add syscall %d exit\n", current->pid, psr->sysnum);
@@ -5869,6 +5873,7 @@ get_next_syscall_enter (struct replay_thread* prt, struct replay_group* prg, int
 	if (ppretparams) {
 		if (psr->flags & SR_HAS_RETPARAMS) {
 			*ppretparams = argshead(prect);
+			printk("ppretparams is %s\n", *(ppretparams+4));
 		} else {
 			*ppretparams = NULL;
 		}
@@ -9959,10 +9964,20 @@ record_ioctl (unsigned int fd, unsigned int cmd, unsigned long arg)
 	struct inode* ino = filp->f_dentry->d_inode;
         unsigned int maj = MAJOR(ino->i_rdev);
 	printk("major number is %u\n", maj);
-	if (maj == 149){
-           printk("found spec device");
-	}
+	int spec = 0; //flag for spec case 
+	/*if (maj == 149){
+           printk("found spec device\n");
+	   
+	}*/
 	switch (cmd) {
+	case SPECI_SET_IGN:
+		if (maj == 149){
+           	    printk("found spec device\n");
+		    dir = _IOC_WRITE;
+		    size = 5;
+		    spec = 1;
+		    break;
+        	}
 	case TCSBRK:
 	case TCSBRKP:
 	case TIOCSBRK:
@@ -10109,7 +10124,7 @@ record_ioctl (unsigned int fd, unsigned int cmd, unsigned long arg)
 
 	DPRINT ("Pid %d records ioctl fd %d cmd 0x%x arg 0x%lx returning %ld\n", current->pid, fd, cmd, arg, rc);
 
-	if (rc >= 0 && (dir & _IOC_WRITE)) {
+	if (rc >= 0 && (dir & _IOC_WRITE) && (!spec)) {
 		recbuf = ARGSKMALLOC(sizeof(u_long)+size, GFP_KERNEL);
 		if (!recbuf) {
 			printk ("record_ioctl: can't allocate return\n");
@@ -10124,7 +10139,29 @@ record_ioctl (unsigned int fd, unsigned int cmd, unsigned long arg)
 			*((u_long *)recbuf) = size;
 		}
 	}
-
+	if (spec){
+            	printk("Special arg for spec ioctl\n");
+                char new_arg[] = "spec";
+		recbuf = ARGSKMALLOC(size + sizeof(u_long), GFP_KERNEL);
+                if (!recbuf) {
+                        printk ("record_ioctl: can't allocate return\n");
+                        rc = -ENOMEM;
+              } else {	 
+	        *((u_long *)recbuf) = size;  
+               	if (copy_from_user(recbuf + sizeof(u_long), (void __user *)new_arg, size)) {
+                    	    printk("record_ioctl: faulted on readback\n");
+                   	    ARGSKFREE(recbuf, sizeof(u_long)+size);
+                            recbuf = NULL;
+                            rc = -EFAULT;
+                	}
+		}
+		printk("arg is %s\n", new_arg);
+		printk("size is %d\n", size);
+		printk("recbuf is %s\n", recbuf+sizeof(u_long));
+//                *((u_long *)recbuf) = size;
+//		printk("recbuf is %s\n", recbuf);
+	}
+	printk("recbuf is %s\n", recbuf+sizeof(u_long));	
 	new_syscall_exit (54, recbuf);
 
 	return rc;
@@ -10138,10 +10175,25 @@ replay_ioctl (unsigned int fd, unsigned int cmd, unsigned long arg)
 	long rc = get_next_syscall (54, &retparams);
 	if (rc == -EINTR && current->replay_thrd->rp_pin_attaching) return rc;
 	if (retparams) {
-		my_size = *((u_long *)retparams);
-		if (copy_to_user((void __user *)arg, retparams+sizeof(u_long), my_size)) {
-			printk("replay_ioctl: pid %d faulted\n", current->pid);
-			return -EFAULT;
+		if (cmd == SPECI_SET_IGN){
+		    my_size = *((u_long *)retparams);;
+		    printk("size of my_size is: %d\n", my_size);
+		    char *thingy[5];
+		    printk("retparams is %s\n", *((char *)retparams+sizeof(u_long)));
+		    memcpy(thingy, (char *)(retparams+sizeof(u_long)), 5);
+		    printk("Made it here! And retparams is %s\n!", thingy);
+		    if ("spec" == (char *)retparams){
+			printk("made it special handling for replay of set_ign ioctl\n");
+			long retval = set_ign(arg);
+           		return retval;
+		    }
+		}
+		else{
+			my_size = *((u_long *)retparams);
+			if (copy_to_user((void __user *)arg, retparams+sizeof(u_long), my_size)) {
+				printk("replay_ioctl: pid %d faulted\n", current->pid);
+				return -EFAULT;
+			}
 		}
 		argsconsume(current->replay_thrd->rp_record_thread, sizeof(u_long) + my_size);
 	}
