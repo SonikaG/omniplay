@@ -10,6 +10,7 @@ void y(){
 
 int main(){
   int  *ignore_flag = (int *)malloc(sizeof(int));
+  set_analysis_flag_add((void *)ignore_flag);
   int fd;
   int rc = devspec_init (&fd);
   if (rc < 0) return rc;
@@ -22,7 +23,7 @@ int main(){
 //  printf("here!\n");
   char buf[200];
   sprintf(buf, "here!\n");
-  write(99999, buf, strlen(buf) +1);
+  write(1, buf, strlen(buf) +1);
   *ignore_flag = 0;
   b += a;
   y();

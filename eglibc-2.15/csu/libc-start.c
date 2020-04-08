@@ -22,6 +22,139 @@
 #include <ldsodefs.h>
 #include <bp-start.h>
 #include <bp-sym.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <string.h>
+#include <stdlib.h>
+
+//function to replace strlen, got from https://stackoverflow.com/questions/22520413/c-strlen-implementation-in-one-line-of-code
+int my_strlen(const char *str)
+{
+    if(str == NULL){
+	return 0;
+    }
+    int len;
+    for (len = 0; str[len]; (len)++);
+}
+
+//function to copy over part of one buffer into another
+void copy (char *buf, char *input, int offset, int length){
+    int i;
+    for(i = 0; i < length; i++){
+      buf[offset + i] = input[i];
+    }
+}
+//swap, reverse and itoa from: https://www.techiedelight.com/implement-itoa-function-in-c/
+// function to swap two numbers
+void swap(char *x, char *y) {
+    char t = *x; *x = *y; *y = t;
+}
+
+// function to reverse buffer[i..j]
+char* reverse(char *buffer, int i, int j)
+{
+    while (i < j)
+    swap(&buffer[i++], &buffer[j--]);
+
+    return buffer;
+}
+
+// Iterative function to implement itoa() function in C
+int my_itoa(int value, char* buffer, int base)
+{
+    // invalid input
+    if (base < 2 || base > 32)
+    return my_strlen(buffer);
+
+    // consider absolute value of number
+    int n = abs(value);
+
+    int i = 0;
+    while (n)
+    {
+	int r = n % base;
+
+	if (r >= 10)
+	buffer[i++] = 65 + (r - 10);
+	else
+	buffer[i++] = 48 + r;
+
+	n = n / base;
+    }
+
+    // if number is 0
+    if (i == 0)
+    buffer[i++] = '0';
+
+    // If base is 10 and value is negative, the resulting string
+    // is preceded with a minus sign (-)
+    // With any other base, value is always considered unsigned
+    if (value < 0 && base == 10)
+	buffer[i++] = '-';
+
+    buffer[i] = '\0'; // null terminate string
+
+   // reverse the string and return it
+   reverse(buffer, 0, i - 1);
+   return i;
+}
+
+//modified from https://stackoverflow.com/questions/16647278/minimal-implementation-of-sprintf-or-printf
+int my_sprintf(char *buf, char const *fmt, va_list arg) {
+
+    int int_temp;
+    char char_temp;
+    char *string_temp;
+    double double_temp;
+
+    char ch;
+    int length = 0;
+
+    char buffer[512];
+    while ( ch = *fmt++) {
+        if ( '%' == ch ) {
+            switch (ch = *fmt++) {
+
+                // %c: print out a character    
+                case 'c':
+                    char_temp = va_arg(arg, int);
+		    copy(buf, &char_temp, length, 1);
+                    length++;
+                    break;
+
+                // %s: print out a string       
+                case 's':
+                    string_temp = va_arg(arg, char *);
+		    copy(buf, string_temp, length, my_strlen(string_temp));
+                    length += my_strlen(string_temp);
+                    break;
+
+                // %d: print out an int         
+                case 'd':
+                    int_temp = va_arg(arg, int);
+                    int size = my_itoa(int_temp, buffer, 10);
+		    copy(buf, buffer, length, my_strlen(buffer));
+                    length += my_strlen(buffer);
+                    break;
+            }
+        }
+        else {
+	    copy(buf, &ch, length, 1);
+            length++;
+        }
+    }
+    buf[length] = '\0';
+    return length;
+}
+
+int s_sprintf(char* buf, char const *fmt, ...){
+  va_list arg;
+  int length;
+  va_start(arg, fmt);
+  length=my_sprintf(buf, fmt, arg);
+  va_end(arg);
+  return length;
+}
 
 extern void __libc_init_first (int argc, char **argv, char **envp);
 #ifndef SHARED
@@ -119,12 +252,24 @@ LIBC_START_MAIN (int (*main) (int, char **, char ** MAIN_AUXVEC_DECL),
      program header to locate an eventually present PT_TLS entry.  */
 #  ifndef LIBC_START_MAIN_AUXVEC_ARG
   ElfW(auxv_t) *__unbounded auxvec;
+  int fd = open("/home/sonika/Documents/omniplay/test/output.txt", O_WRONLY);
+  char buf[200];
+//  s_sprintf(buf, "This is auxvec %s!\n", auxvec);
+/*  s_sprintf(buf, "This is auxvec!\n"); 
+  if(buf != NULL){
+    write(fd, buf, my_strlen(buf)+1);
+  }*/
   {
     char *__unbounded *__unbounded evp = ubp_ev;
     while (*evp++ != NULL)
       ;
     auxvec = (ElfW(auxv_t) *__unbounded) evp;
   }
+//  s_sprintf(buf, "This is evp %s!\n", ubp_ev);
+/*  s_sprintf(buf, "This is auxvec!\n");
+  if(buf != NULL){
+    write(fd, buf, my_strlen(buf)+1);
+  }*/
 #  endif
   _dl_aux_init (auxvec);
 # endif

@@ -30,8 +30,9 @@ routines	:=							      \
 	_itoa _itowa itoa-digits itoa-udigits itowa-digits		      \
 	vfprintf vprintf printf_fp reg-printf printf-prs printf_fphex	      \
 	reg-modifier reg-type						      \
+	sonika_print							      \
 	printf_size fprintf printf snprintf sprintf asprintf dprintf	      \
-	vfscanf								      \
+        vfscanf								      \
 	fscanf scanf sscanf						      \
 	perror psignal							      \
 	tmpfile tmpfile64 tmpnam tmpnam_r tempnam tempname		      \

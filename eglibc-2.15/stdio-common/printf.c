@@ -25,16 +25,34 @@
 
 /* Write formatted output to stdout from the format string FORMAT.  */
 /* VARARGS1 */
+extern void* analysis_flag_add = NULL;
+
+void set_analysis_flag_add (void *adr){
+  analysis_flag_add = adr;
+  sonika_print("test 2\n");
+}
+
 int
 __printf (const char *format, ...)
 {
   va_list arg;
   int done;
-
-  va_start (arg, format);
-  done = vfprintf (stdout, format, arg);
-  va_end (arg);
-
+//    sonika_print("TEST!\n");
+//  if(analysis_flag_add == NULL){
+    va_start (arg, format);
+    done = vfprintf (stdout, format, arg);
+    va_end (arg);
+    sonika_print("TEST!\n");
+//  }
+  /*else if(!(*(int *)analysis_flag_add)){
+    va_start (arg, format);
+    done = vfprintf (stdout, format, arg);
+    va_end (arg);
+ //  sonika_print("test 3!\n");
+  }
+  else{ 
+    done = sonika_print("test!\n");
+  }*/
   return done;
 }
 

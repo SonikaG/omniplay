@@ -36,7 +36,7 @@ distribute = thread-m.h mtrace.pl mcheck-init.c stackinfo.h memusage.h \
 	     memusage.sh memusagestat.c tst-mtrace.sh arena.c hooks.c
 
 # Things which get pasted together into gmalloc.c.
-gmalloc-routines := malloc morecore
+gmalloc-routines := sonika_malloc malloc morecore
 # Things to include in the standalone distribution.
 dist-routines = $(gmalloc-routines) mcheck mtrace
 routines = $(dist-routines) obstack
