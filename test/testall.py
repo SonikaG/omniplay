@@ -77,7 +77,7 @@ for rec in reclist:
                     time.sleep(1)
             else:
                 print "mismatch!!!\n"
-		done = 1
+                sys.exit(1)
         else:
             print "error: never started?\n"
             sys.exit(0)

@@ -252,8 +252,8 @@ LIBC_START_MAIN (int (*main) (int, char **, char ** MAIN_AUXVEC_DECL),
      program header to locate an eventually present PT_TLS entry.  */
 #  ifndef LIBC_START_MAIN_AUXVEC_ARG
   ElfW(auxv_t) *__unbounded auxvec;
-  int fd = open("/home/sonika/Documents/omniplay/test/output.txt", O_WRONLY);
-  char buf[200];
+//  int fd = open("/home/sonika/Documents/omniplay/test/output.txt", O_WRONLY);
+//  char buf[200];
 //  s_sprintf(buf, "This is auxvec %s!\n", auxvec);
 /*  s_sprintf(buf, "This is auxvec!\n"); 
   if(buf != NULL){

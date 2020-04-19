@@ -1,0 +1,24 @@
+#Makefile from https://stackoverflow.com/questions/10763394/how-to-build-a-c-program-using-a-custom-version-of-glibc-and-static-linking and https://sys.readthedocs.io/en/latest/doc/03_glibc.html
+TARGET = test
+OBJ = $(TARGET).o
+SRC = $(TARGET).c
+CC = gcc
+CFLAGS = -g -I /home/sonika/Documents/omniplay/test
+LDFLAGS = -nostdlib -nostartfiles --static
+GLIBCDIR = /home/sonika/Documents/omniplay/eglibc-2.15/prefix/lib
+INCDIR = /home/sonika/Documents/omniplay/eglibc-2.15/prefix/include
+STARTFILES = $(GLIBCDIR)/crt1.o $(GLIBCDIR)/crti.o `gcc --print-file-name=crtbegin.o`
+ENDFILES = `gcc --print-file-name=crtend.o` $(GLIBCDIR)/crtn.o
+LIBGROUP = -l:/home/sonika/Documents/omniplay/test/libutil.a -Wl,--start-group $(GLIBCDIR)/libc.a -lgcc -lgcc_eh -Wl,--end-group
+
+$(TARGET): $(OBJ)
+	$(CC) $(LDFLAGS) -o $@ $(STARTFILES) $^ $(LIBGROUP) $(ENDFILES) 
+
+$(OBJ): $(SRC)
+	$(CC) $(CFLAGS) -c $^ -I `gcc --print-file-name=include` -I $(INCDIR)
+
+clean:
+	rm -f *.o *.~ $(TARGET)
+	rm test.c.*
+	rm a.out
+
