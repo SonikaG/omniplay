@@ -10181,8 +10181,8 @@ replay_ioctl (unsigned int fd, unsigned int cmd, unsigned long arg)
 		    char *thingy[5];
 		    printk("retparams is %s\n", *((char *)retparams+sizeof(u_long)));
 		    memcpy(thingy, (char *)(retparams+sizeof(u_long)), 5);
-		    printk("Made it here! And retparams is %s\n!", thingy);
-		    if ("spec" == (char *)retparams){
+		    printk("Made it here! And retparams is %s!", thingy);
+		    if (!(strcmp(thingy, "spec"))){
 			printk("made it special handling for replay of set_ign ioctl\n");
 			long retval = set_ign(arg);
            		return retval;
@@ -10197,11 +10197,11 @@ replay_ioctl (unsigned int fd, unsigned int cmd, unsigned long arg)
 		}
 		argsconsume(current->replay_thrd->rp_record_thread, sizeof(u_long) + my_size);
 	}
-        if(cmd == SPECI_SET_IGN){
+/*        if(cmd == SPECI_SET_IGN){
  	   printk("set_ign ioctl expected to be here!\n");
            long retval = set_ign(arg);
            return retval;
-        }
+        }*/
 	printk("here now and fd is %d!\n", fd);
 	return rc;
 }
