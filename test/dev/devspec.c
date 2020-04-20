@@ -54,6 +54,7 @@ spec_psdev_ioctl (struct file* file, u_int cmd, u_long data)
 	struct filemap_entry_data fedata;
 	struct open_fds_data ofdata;
 	struct get_record_pid_data recordpid_data;
+	struct analyis_data analysisdata;
 	struct set_pin_address_data pin_data;
 	struct get_replay_pid_data replay_pid_data;
 	int syscall;
@@ -391,7 +392,18 @@ spec_psdev_ioctl (struct file* file, u_int cmd, u_long data)
 	    retval = redo_munmap ();
 		return retval;
 	}
-
+	case SPECI_SET_IGN: {
+                if (len != sizeof(struct analysis_data))
+                {
+                        printk("ioctl SPECI_SET_IGN fails, len %d\n", len);
+                        return -EINVAL;
+                }
+                if (copy_from_user(&analysisdata, (void *)data, sizeof(analysisdata)))
+                {
+                        return -EFAULT;
+                }
+	  	return set_ign(analysisdata.ign_adr, analysisdata.analy_adr);
+	}
 	default:
 		return -EINVAL;
 	}
@@ -431,14 +443,18 @@ int init_module(void)
 
     printk(KERN_INFO "User-level speculation module version 1.0\n");
 
-    err = alloc_chrdev_region(&spec_dev, 0, 1, SPEC_NAME);
+/*    err = alloc_chrdev_region(&spec_dev, 0, 1, SPEC_NAME);
     if (err < 0) {
 	printk("Couldn't alloc devnumber for devspec\n");
 	goto fail;
+    }*/
+
+    spec_dev = MKDEV(SPEC_PSDEV_MAJOR, 0);
+    err = register_chrdev_region(spec_dev, 1, SPEC_NAME);
+    if (err < 0) {
+        printk("Couldn't alloc devnumber for devspec\n");
+        goto fail;
     }
-
-    spec_dev = MKDEV(MAJOR(spec_dev), 0);
-
     dev_class = class_create(THIS_MODULE, SPEC_NAME);
     if (IS_ERR(dev_class)) {
 	err = PTR_ERR(dev_class);

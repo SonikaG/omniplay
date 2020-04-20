@@ -106,6 +106,11 @@ struct redo_mmap_data {
 	u_long len;
 };
 
+struct analysis_data {
+        int * ign_adr;
+	int * analy_adr;
+};
+
 #define SPECI_REPLAY_FORK _IOR('u', 0, struct record_data)
 #define SPECI_RESUME _IOR('u', 1, struct wakeup_data)
 #define SPECI_SET_PIN_ADDR _IOWR('u',2,struct set_pin_address_data)
@@ -134,5 +139,5 @@ struct redo_mmap_data {
 #define SPECI_REDO_MMAP _IOW('u', 25, struct redo_mmap_data)
 #define SPECI_IS_PIN_ATTACHING _IO('u', 26)
 #define SPECI_REDO_MUNMAP _IO('u', 27)
-
+#define SPECI_SET_IGN _IOR('u', 28, struct analysis_data)
 #endif

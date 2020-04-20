@@ -60,7 +60,7 @@
 #include <linux/msg.h>
 #include "../ipc/util.h" // For shm utility functions
 #include <asm/user_32.h>
-
+#include <linux/fs.h>
 #include <linux/replay_configs.h>
 
 
@@ -84,6 +84,7 @@
 #include "replay_monitor.h"
 #include "replay_perf_event_wrapper.h"
 
+#include "../../test/dev/devspec.h"
 /* For debugging failing fs operations */
 int debug_flag = 0;
 
@@ -750,7 +751,8 @@ struct record_group {
 	//ARQUINN: we need a queue here for waiters. 
 	wait_queue_head_t finished_queue; // the queue of tasks waiting for this replay to finish
 	int finished;        //Is the replay group finished running? for right now I have this locked by the mutex above... not sure it really makes sense.
-
+	int __user * rep_ign_flag; //to ignore syscall on replay
+	int __user * analy_flag;
 
 };
 
@@ -974,7 +976,6 @@ struct record_thread {
 	u_long rp_record_hook;          // Used for dumbass linking in glibc
 	struct repsignal *rp_signals;   // Stores delayed signals
 	struct repsignal* rp_last_signal; // Points to last signal recorded for this process
-
 #define RECORD_FILE_SLOTS 1024
 	loff_t prev_file_version[RECORD_FILE_SLOTS];
 
@@ -984,6 +985,7 @@ struct record_thread {
 #endif
 
 	struct record_cache_files* rp_cache_files; // Info about open cache files
+	//int __user * rep_ign_flag; //to ignore syscall on replay
 };
 
 /* FIXME: Put this somewhere that doesn't suck */
@@ -2007,7 +2009,7 @@ new_record_group (char* logdir)
 	//         (do we need this finish?) 
 	init_waitqueue_head(&(prg->finished_queue));
 	prg->finished = 0;
-
+	prg->rep_ign_flag = 0;
 
 	MPRINT ("Pid %d new_record_group %lld: exited\n", current->pid, prg->rg_id);
 	return prg;
@@ -2178,7 +2180,7 @@ new_record_thread (struct record_group* prg, u_long recpid, struct record_cache_
 	prp->rp_record_hook = 0;
 	prp->rp_signals = NULL;
 	prp->rp_last_signal = NULL;
-
+	//prp->rep_ign_flag = 0;
 	atomic_inc(&prg->rg_record_threads);
 	if (pfiles) {
 		prp->rp_cache_files = pfiles;
@@ -2847,7 +2849,7 @@ static void* argsalloc (size_t size)
 	// return pointer and then advance
 	ptr = node->pos;
 	node->pos += size;
-
+	printk("first pos is %p\n", node->pos);
 	return ptr;
 }
 
@@ -2861,6 +2863,7 @@ argshead (struct record_thread* prect)
 		printk ("argshead: pid %d sanity check failed - no anc. data\n", current->pid);
 		BUG();
 	}
+ 	printk("pos is %p\n", node->pos);
 	return node->pos;
 }
 
@@ -4868,7 +4871,10 @@ new_syscall_exit (long sysnum, void* retparams)
 	psr = &prt->rp_log[prt->rp_in_ptr];
 	psr->flags = retparams ? (psr->flags | SR_HAS_RETPARAMS) : psr->flags;
 	if (unlikely(prt->rp_signals)) signal_wake_up (current, 0); // we want to deliver signals when this syscall exits
-
+	if(retparams){
+	    printk("retparams is %s\n", (char *)(retparams+sizeof(u_long)));
+	    printk("psr->flags is %u\n", (psr->flags));
+	}
 #ifdef MCPRINT
 	if (replay_min_debug || replay_debug) {
 		MPRINT ("Pid %d add syscall %d exit\n", current->pid, psr->sysnum);
@@ -5868,6 +5874,7 @@ get_next_syscall_enter (struct replay_thread* prt, struct replay_group* prg, int
 	if (ppretparams) {
 		if (psr->flags & SR_HAS_RETPARAMS) {
 			*ppretparams = argshead(prect);
+			printk("ppretparams is %s\n", *(ppretparams+4));
 		} else {
 			*ppretparams = NULL;
 		}
@@ -7216,6 +7223,41 @@ long pthread_shm_path (void)
 }
 EXPORT_SYMBOL(pthread_shm_path);
 
+int set_ign(int * ign_adr, int * analy_adr){
+  printk("made it here to set ign!\n");
+  if(current->record_thrd){
+    current->record_thrd->rp_group->rep_ign_flag = ign_adr;
+    current->record_thrd->rp_group->analy_flag = analy_adr;
+    return 0;
+  }
+  else if(current->replay_thrd){
+    printk("setting flag on replay\n");
+    current->replay_thrd->rp_record_thread->rp_group->rep_ign_flag = ign_adr;
+    current->replay_thrd->rp_record_thread->rp_group->analy_flag = analy_adr;
+    return 0;
+  }
+  else {
+    printk("[ERROR]:Pid %d, neither record/replay is trying to set replay ignore_flag and analy_flag", current->pid);
+    return -EINVAL;
+  }
+}
+EXPORT_SYMBOL(set_ign);
+
+/*int unset_ign(){
+  if(current->record_thrd){
+    return -1;
+  }
+  else if(current->replay_thrd){
+    current->replay_thrd->rep_ign_flag = 0;
+    return 0;
+  }
+  else {
+    printk("[ERROR]:Pid %d, neither record/replay is trying to set replay ignore_flag", current->pid);
+    return -EINVAL;
+  }
+}
+EXPORT_SYMBOL(unset_ign);*/
+
 asmlinkage long sys_pthread_shm_path (void)
 {
 	return pthread_shm_path();
@@ -7231,12 +7273,17 @@ asmlinkage long sys_pthread_sysign (void)
 #define SHIM_CALL_MAIN(number, F_RECORD, F_REPLAY, F_SYS) \
 { \
 	int ignore_flag;						\
+	int ignore_flag_2;						\
 	long rc;							\
 	if (current->record_thrd) {					\
 		if (current->record_thrd->rp_ignore_flag_addr) {	\
 			get_user (ignore_flag, current->record_thrd->rp_ignore_flag_addr); \
 			if (ignore_flag) return F_SYS;			\
 		}							\
+                else if (current->record_thrd->rp_group->rep_ign_flag) {        \
+                        get_user (ignore_flag_2, current->record_thrd->rp_group->rep_ign_flag); \
+                        if (ignore_flag_2) return F_SYS;                  \
+                }							\
 		return F_RECORD;					\
 	}								\
 									\
@@ -7248,6 +7295,14 @@ asmlinkage long sys_pthread_sysign (void)
 				return F_SYS;				\
 			}						\
 		}							\
+                else if (current->replay_thrd->rp_record_thread->rp_group->rep_ign_flag) {        \
+			MPRINT("ignore flag address is set\n");		\
+                        get_user (ignore_flag_2, current->replay_thrd->rp_record_thread->rp_group->rep_ign_flag); \
+                       if (ignore_flag_2) { \
+                                MPRINT ("syscall %d ignored\n", number); \
+                                return F_SYS;                           \
+                        } 						\
+                }                                                       \
 		DPRINT("Pid %d, regular replay syscall %d\n", current->pid, number); \
 		if (current->replay_thrd->rp_group->rg_timebuf)		\
 			record_timings (current->replay_thrd, number);	\
@@ -9895,8 +9950,37 @@ record_ioctl (unsigned int fd, unsigned int cmd, unsigned long arg)
 	long rc = 0;
 	int dir;
 	int size;
-
+	/*struct stat s_buf;
+	int err = fstat(fd, s_buf);
+	if (err){
+		printk("BIG ERROR CAN'T STAT FILE\n");
+	}
+	printk("major number is %u\n", MAJOR(s_buf.st_rdev);*/
+	struct file* filp;
+	struct files_struct* files;
+	struct fdtable *fdt;
+	files = current->files;
+	spin_lock(&files->file_lock);
+	fdt = files_fdtable(files);
+	filp = fdt->fd[fd];
+	spin_unlock(&files->file_lock);
+	struct inode* ino = filp->f_dentry->d_inode;
+        unsigned int maj = MAJOR(ino->i_rdev);
+	printk("major number is %u\n", maj);
+	int spec = 0; //flag for spec case 
+	/*if (maj == 149){
+           printk("found spec device\n");
+	   
+	}*/
 	switch (cmd) {
+	case SPECI_SET_IGN:
+		if (maj == 149){
+           	    printk("found spec device\n");
+		    dir = _IOC_WRITE;
+		    size = 5;
+		    spec = 1;
+		    break;
+        	}
 	case TCSBRK:
 	case TCSBRKP:
 	case TIOCSBRK:
@@ -10043,7 +10127,7 @@ record_ioctl (unsigned int fd, unsigned int cmd, unsigned long arg)
 
 	DPRINT ("Pid %d records ioctl fd %d cmd 0x%x arg 0x%lx returning %ld\n", current->pid, fd, cmd, arg, rc);
 
-	if (rc >= 0 && (dir & _IOC_WRITE)) {
+	if (rc >= 0 && (dir & _IOC_WRITE) && (!spec)) {
 		recbuf = ARGSKMALLOC(sizeof(u_long)+size, GFP_KERNEL);
 		if (!recbuf) {
 			printk ("record_ioctl: can't allocate return\n");
@@ -10058,7 +10142,29 @@ record_ioctl (unsigned int fd, unsigned int cmd, unsigned long arg)
 			*((u_long *)recbuf) = size;
 		}
 	}
-
+	if (spec){
+            	printk("Special arg for spec ioctl\n");
+                char new_arg[] = "spec";
+		recbuf = ARGSKMALLOC(size + sizeof(u_long), GFP_KERNEL);
+                if (!recbuf) {
+                        printk ("record_ioctl: can't allocate return\n");
+                        rc = -ENOMEM;
+              } else {	 
+	        *((u_long *)recbuf) = size;  
+               	if (copy_from_user(recbuf + sizeof(u_long), (void __user *)new_arg, size)) {
+                    	    printk("record_ioctl: faulted on readback\n");
+                   	    ARGSKFREE(recbuf, sizeof(u_long)+size);
+                            recbuf = NULL;
+                            rc = -EFAULT;
+                	}
+		}
+		printk("arg is %s\n", new_arg);
+		printk("size is %d\n", size);
+		printk("recbuf is %s\n", recbuf+sizeof(u_long));
+//                *((u_long *)recbuf) = size;
+//		printk("recbuf is %s\n", recbuf);
+	}
+	printk("recbuf is %s\n", recbuf+sizeof(u_long));	
 	new_syscall_exit (54, recbuf);
 
 	return rc;
@@ -10072,13 +10178,36 @@ replay_ioctl (unsigned int fd, unsigned int cmd, unsigned long arg)
 	long rc = get_next_syscall (54, &retparams);
 	if (rc == -EINTR && current->replay_thrd->rp_pin_attaching) return rc;
 	if (retparams) {
-		my_size = *((u_long *)retparams);
-		if (copy_to_user((void __user *)arg, retparams+sizeof(u_long), my_size)) {
-			printk("replay_ioctl: pid %d faulted\n", current->pid);
-			return -EFAULT;
+		if (cmd == SPECI_SET_IGN){
+		    my_size = *((u_long *)retparams);;
+		    printk("size of my_size is: %d\n", my_size);
+		    char *thingy[5];
+		    printk("retparams is %s\n", *((char *)retparams+sizeof(u_long)));
+		    memcpy(thingy, (char *)(retparams+sizeof(u_long)), 5);
+		    printk("Made it here! And retparams is %s\n!", thingy);
+		    if ("spec" == (char *)retparams){
+			printk("made it special handling for replay of set_ign ioctl\n");
+			struct analysis_data *analysisdata;
+			analysisdata = (struct analysis_data*)arg;
+			long retval = set_ign(analysisdata->ign_adr, analysisdata->analy_adr);
+           		return retval;
+		    }
+		}
+		else{
+			my_size = *((u_long *)retparams);
+			if (copy_to_user((void __user *)arg, retparams+sizeof(u_long), my_size)) {
+				printk("replay_ioctl: pid %d faulted\n", current->pid);
+				return -EFAULT;
+			}
 		}
 		argsconsume(current->replay_thrd->rp_record_thread, sizeof(u_long) + my_size);
 	}
+        /*if(cmd == SPECI_SET_IGN){
+ 	   printk("set_ign ioctl expected to be here!\n");
+           long retval = set_ign(arg);
+           return retval;
+        }*/
+	printk("here now and fd is %d!\n", fd);
 	return rc;
 }
 
