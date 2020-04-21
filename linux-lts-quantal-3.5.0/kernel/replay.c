@@ -2010,7 +2010,7 @@ new_record_group (char* logdir)
 	init_waitqueue_head(&(prg->finished_queue));
 	prg->finished = 0;
 	prg->rep_ign_flag = 0;
-
+	prg->analy_flag = 0;
 	MPRINT ("Pid %d new_record_group %lld: exited\n", current->pid, prg->rg_id);
 	return prg;
 
@@ -10185,7 +10185,7 @@ replay_ioctl (unsigned int fd, unsigned int cmd, unsigned long arg)
 		    printk("retparams is %s\n", *((char *)retparams+sizeof(u_long)));
 		    memcpy(thingy, (char *)(retparams+sizeof(u_long)), 5);
 		    printk("Made it here! And retparams is %s\n!", thingy);
-		    if ("spec" == (char *)retparams){
+		    if (!(strcmp(thingy, "spec"))){
 			printk("made it special handling for replay of set_ign ioctl\n");
 			struct analysis_data *analysisdata;
 			analysisdata = (struct analysis_data*)arg;
