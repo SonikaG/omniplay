@@ -309,9 +309,9 @@ u_long* map_shared_clock (int fd_spec)
     return clock;
 }
 
-int set_ign(int fd_spec, int * ign_adr, int * analy_adr){
+int set_ign(int fd_spec, int * ign_adr, int * analysis_adr){
   struct analysis_data data;
   data.ign_adr = ign_adr;
-  data.analy_adr = analy_adr;
+  data.analysis_adr = analysis_adr;
   return ioctl (fd_spec, SPECI_SET_IGN, data);
 }

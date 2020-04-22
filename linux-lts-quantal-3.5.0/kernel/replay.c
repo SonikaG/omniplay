@@ -752,7 +752,7 @@ struct record_group {
 	wait_queue_head_t finished_queue; // the queue of tasks waiting for this replay to finish
 	int finished;        //Is the replay group finished running? for right now I have this locked by the mutex above... not sure it really makes sense.
 	int __user * rep_ign_flag; //to ignore syscall on replay
-	int __user * analy_flag;
+	int __user * analysis_flag;
 
 };
 
@@ -2010,7 +2010,7 @@ new_record_group (char* logdir)
 	init_waitqueue_head(&(prg->finished_queue));
 	prg->finished = 0;
 	prg->rep_ign_flag = 0;
-	prg->analy_flag = 0;
+	prg->analysis_flag = 0;
 	MPRINT ("Pid %d new_record_group %lld: exited\n", current->pid, prg->rg_id);
 	return prg;
 
@@ -7223,21 +7223,21 @@ long pthread_shm_path (void)
 }
 EXPORT_SYMBOL(pthread_shm_path);
 
-int set_ign(int * ign_adr, int * analy_adr){
+int set_ign(int * ign_adr, int * analysis_adr){
   printk("made it here to set ign!\n");
   if(current->record_thrd){
     current->record_thrd->rp_group->rep_ign_flag = ign_adr;
-    current->record_thrd->rp_group->analy_flag = analy_adr;
+    current->record_thrd->rp_group->analysis_flag = analysis_adr;
     return 0;
   }
   else if(current->replay_thrd){
     printk("setting flag on replay\n");
     current->replay_thrd->rp_record_thread->rp_group->rep_ign_flag = ign_adr;
-    current->replay_thrd->rp_record_thread->rp_group->analy_flag = analy_adr;
+    current->replay_thrd->rp_record_thread->rp_group->analysis_flag = analysis_adr;
     return 0;
   }
   else {
-    printk("[ERROR]:Pid %d, neither record/replay is trying to set replay ignore_flag and analy_flag", current->pid);
+    printk("[ERROR]:Pid %d, neither record/replay is trying to set replay ignore_flag and analysis_flag", current->pid);
     return -EINVAL;
   }
 }
@@ -10189,7 +10189,7 @@ replay_ioctl (unsigned int fd, unsigned int cmd, unsigned long arg)
 			printk("made it special handling for replay of set_ign ioctl\n");
 			struct analysis_data *analysisdata;
 			analysisdata = (struct analysis_data*)arg;
-			long retval = set_ign(analysisdata->ign_adr, analysisdata->analy_adr);
+			long retval = set_ign(analysisdata->ign_adr, analysisdata->analysis_adr);
            		return retval;
 		    }
 		}

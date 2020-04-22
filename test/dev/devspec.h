@@ -108,7 +108,7 @@ struct redo_mmap_data {
 
 struct analysis_data {
         int * ign_adr;
-	int * analy_adr;
+	int * analysis_adr;
 };
 
 #define SPECI_REPLAY_FORK _IOR('u', 0, struct record_data)
