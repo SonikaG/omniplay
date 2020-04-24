@@ -752,7 +752,7 @@ struct record_group {
 	wait_queue_head_t finished_queue; // the queue of tasks waiting for this replay to finish
 	int finished;        //Is the replay group finished running? for right now I have this locked by the mutex above... not sure it really makes sense.
 	int __user * rep_ign_flag; //to ignore syscall on replay
-	int __user * analysis_flag;
+	int __user * analysis_flag; //to let a user program know it is an analysis region
 
 };
 
@@ -2009,6 +2009,7 @@ new_record_group (char* logdir)
 	//         (do we need this finish?) 
 	init_waitqueue_head(&(prg->finished_queue));
 	prg->finished = 0;
+	//intialize these addresses 
 	prg->rep_ign_flag = 0;
 	prg->analysis_flag = 0;
 	MPRINT ("Pid %d new_record_group %lld: exited\n", current->pid, prg->rg_id);
@@ -7223,6 +7224,7 @@ long pthread_shm_path (void)
 }
 EXPORT_SYMBOL(pthread_shm_path);
 
+//the ioctl is implemented here just communicated (user space) addresses to kernel 
 int set_ign(int * ign_adr, int * analysis_adr){
   printk("made it here to set ign!\n");
   if(current->record_thrd){
@@ -7236,7 +7238,7 @@ int set_ign(int * ign_adr, int * analysis_adr){
     current->replay_thrd->rp_record_thread->rp_group->analysis_flag = analysis_adr;
     return 0;
   }
-  else {
+  else { //you don't want to call this method from a thread that isn't record or replay
     printk("[ERROR]:Pid %d, neither record/replay is trying to set replay ignore_flag and analysis_flag", current->pid);
     return -EINVAL;
   }
@@ -9950,20 +9952,18 @@ record_ioctl (unsigned int fd, unsigned int cmd, unsigned long arg)
 	long rc = 0;
 	int dir;
 	int size;
-	/*struct stat s_buf;
-	int err = fstat(fd, s_buf);
-	if (err){
-		printk("BIG ERROR CAN'T STAT FILE\n");
-	}
-	printk("major number is %u\n", MAJOR(s_buf.st_rdev);*/
+	
+	//this is to get the major number 
 	struct file* filp;
 	struct files_struct* files;
 	struct fdtable *fdt;
 	files = current->files;
+	//need to use lock to access fdtable
 	spin_lock(&files->file_lock);
 	fdt = files_fdtable(files);
 	filp = fdt->fd[fd];
 	spin_unlock(&files->file_lock);
+	
 	struct inode* ino = filp->f_dentry->d_inode;
         unsigned int maj = MAJOR(ino->i_rdev);
 	printk("major number is %u\n", maj);
@@ -9973,8 +9973,9 @@ record_ioctl (unsigned int fd, unsigned int cmd, unsigned long arg)
 	   
 	}*/
 	switch (cmd) {
+	//we got our special number, but need to check if spec device ioctl 
 	case SPECI_SET_IGN:
-		if (maj == 149){
+		if (maj == 149){ //check major number to see if spec device 
            	    printk("found spec device\n");
 		    dir = _IOC_WRITE;
 		    size = 5;
@@ -10142,7 +10143,7 @@ record_ioctl (unsigned int fd, unsigned int cmd, unsigned long arg)
 			*((u_long *)recbuf) = size;
 		}
 	}
-	if (spec){
+	if (spec){ //need to tell replay that this was our special ioctl --> use retparams 
             	printk("Special arg for spec ioctl\n");
                 char new_arg[] = "spec";
 		recbuf = ARGSKMALLOC(size + sizeof(u_long), GFP_KERNEL);
@@ -10158,13 +10159,14 @@ record_ioctl (unsigned int fd, unsigned int cmd, unsigned long arg)
                             rc = -EFAULT;
                 	}
 		}
-		printk("arg is %s\n", new_arg);
+		//debug prints 
+		/*printk("arg is %s\n", new_arg);
 		printk("size is %d\n", size);
-		printk("recbuf is %s\n", recbuf+sizeof(u_long));
+		printk("recbuf is %s\n", recbuf+sizeof(u_long));*/
 //                *((u_long *)recbuf) = size;
 //		printk("recbuf is %s\n", recbuf);
 	}
-	printk("recbuf is %s\n", recbuf+sizeof(u_long));	
+	//printk("recbuf is %s\n", recbuf+sizeof(u_long));	
 	new_syscall_exit (54, recbuf);
 
 	return rc;
@@ -10178,14 +10180,14 @@ replay_ioctl (unsigned int fd, unsigned int cmd, unsigned long arg)
 	long rc = get_next_syscall (54, &retparams);
 	if (rc == -EINTR && current->replay_thrd->rp_pin_attaching) return rc;
 	if (retparams) {
-		if (cmd == SPECI_SET_IGN){
+		if (cmd == SPECI_SET_IGN){ //check for our special command 
 		    my_size = *((u_long *)retparams);;
-		    printk("size of my_size is: %d\n", my_size);
+		    //printk("size of my_size is: %d\n", my_size);
 		    char *thingy[5];
-		    printk("retparams is %s\n", *((char *)retparams+sizeof(u_long)));
+		    //printk("retparams is %s\n", *((char *)retparams+sizeof(u_long)));
 		    memcpy(thingy, (char *)(retparams+sizeof(u_long)), 5);
-		    printk("Made it here! And retparams is %s\n!", thingy);
-		    if (!(strcmp(thingy, "spec"))){
+		    //printk("Made it here! And retparams is %s\n!", thingy);
+		    if (!(strcmp(thingy, "spec"))){ // this tells us it was a call to spec device, can handle special way now
 			printk("made it special handling for replay of set_ign ioctl\n");
 			struct analysis_data *analysisdata;
 			analysisdata = (struct analysis_data*)arg;
