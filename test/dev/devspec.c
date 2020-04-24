@@ -54,7 +54,7 @@ spec_psdev_ioctl (struct file* file, u_int cmd, u_long data)
 	struct filemap_entry_data fedata;
 	struct open_fds_data ofdata;
 	struct get_record_pid_data recordpid_data;
-	struct analyis_data analysisdata;
+	struct analyis_data analysisdata; //this is for the addresses that kernel needs to run analysis
 	struct set_pin_address_data pin_data;
 	struct get_replay_pid_data replay_pid_data;
 	int syscall;
@@ -392,7 +392,7 @@ spec_psdev_ioctl (struct file* file, u_int cmd, u_long data)
 	    retval = redo_munmap ();
 		return retval;
 	}
-	case SPECI_SET_IGN: {
+	case SPECI_SET_IGN: { //our new ioctl to tell kernel about ignore address and let kernel set analysis flag
                 if (len != sizeof(struct analysis_data))
                 {
                         printk("ioctl SPECI_SET_IGN fails, len %d\n", len);
@@ -449,7 +449,7 @@ int init_module(void)
 	goto fail;
     }*/
 
-    spec_dev = MKDEV(SPEC_PSDEV_MAJOR, 0);
+    spec_dev = MKDEV(SPEC_PSDEV_MAJOR, 0); //this was added so that the major number is guaranteed to be 149
     err = register_chrdev_region(spec_dev, 1, SPEC_NAME);
     if (err < 0) {
         printk("Couldn't alloc devnumber for devspec\n");
