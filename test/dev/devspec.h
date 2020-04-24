@@ -106,6 +106,8 @@ struct redo_mmap_data {
 	u_long len;
 };
 
+//our new struct to store both of the addresses we want to communicate: where the user program is setting
+//the ignore flag and where the kernel can set the analysis flag
 struct analysis_data {
         int * ign_adr;
 	int * analysis_adr;
