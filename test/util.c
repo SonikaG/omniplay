@@ -309,6 +309,7 @@ u_long* map_shared_clock (int fd_spec)
     return clock;
 }
 
+//this is how the user program can call our ioctl
 int set_ign(int fd_spec, int * ign_adr, int * analysis_adr){
   struct analysis_data data;
   data.ign_adr = ign_adr;
